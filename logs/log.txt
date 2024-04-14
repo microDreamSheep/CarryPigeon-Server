@@ -1,0 +1,79 @@
+2024-04-13T16:14:47.138303Z  INFO rocket::launch: Configured for [4mdebug[0m.    
+2024-04-13T16:14:47.138511Z  INFO rocket::launch::_: address: [1;39m127.0.0.1[0m    
+2024-04-13T16:14:47.138663Z  INFO rocket::launch::_: port: [1;39m8000[0m    
+2024-04-13T16:14:47.138783Z  INFO rocket::launch::_: workers: [1;39m8[0m    
+2024-04-13T16:14:47.138897Z  INFO rocket::launch::_: max blocking threads: [1;39m512[0m    
+2024-04-13T16:14:47.139037Z  INFO rocket::launch::_: ident: [1;39mRocket[0m    
+2024-04-13T16:14:47.139149Z  INFO rocket::launch::_: IP header: [1;39mX-Real-IP[0m    
+2024-04-13T16:14:47.139294Z  INFO rocket::launch::_: limits: [1;39mbytes = 8KiB, data-form = 2MiB, file = 1MiB, form = 32KiB, json = 1MiB, msgpack = 1MiB, string = 8KiB[0m    
+2024-04-13T16:14:47.139448Z  INFO rocket::launch::_: temp dir: [1;39mC:\Users\34898\AppData\Local\Temp\[0m    
+2024-04-13T16:14:47.139600Z  INFO rocket::launch::_: http/2: [1;39mtrue[0m    
+2024-04-13T16:14:47.139764Z  INFO rocket::launch::_: keep-alive: [1;39m5[0m[1;39ms[0m    
+2024-04-13T16:14:47.139945Z  INFO rocket::launch::_: tls: [1;39mdisabled[0m    
+2024-04-13T16:14:47.140123Z  INFO rocket::launch::_: shutdown: [1;39mctrlc = true, force = true, grace = 2s, mercy = 3s[0m    
+2024-04-13T16:14:47.140350Z  INFO rocket::launch::_: log level: [1;39mnormal[0m    
+2024-04-13T16:14:47.140546Z  INFO rocket::launch::_: cli colors: [1;39mtrue[0m    
+2024-04-13T16:14:47.141222Z  INFO rocket::launch: [35mFairings[0m:    
+2024-04-13T16:14:47.141487Z  INFO rocket::launch::_: [1;39mShield[0m ([1;34mliftoff, response, singleton[0m)    
+2024-04-13T16:14:47.144202Z  INFO rocket::shield::shield: [35mShield[0m:    
+2024-04-13T16:14:47.144437Z  INFO rocket::shield::shield::_: X-Content-Type-Options: [39mnosniff[0m    
+2024-04-13T16:14:47.144564Z  INFO rocket::shield::shield::_: X-Frame-Options: [39mSAMEORIGIN[0m    
+2024-04-13T16:14:47.144677Z  INFO rocket::shield::shield::_: Permissions-Policy: [39minterest-cohort=()[0m    
+2024-04-13T16:14:47.144885Z  WARN rocket::launch: [1;39mRocket has launched from [4mhttp://127.0.0.1:8000[0m    
+2024-04-13T16:14:54.286697Z  WARN rocket::server: Received SIGINT. Requesting shutdown.    
+2024-04-13T16:14:54.286948Z  INFO rocket::server: Shutdown requested. Waiting for pending I/O...    
+2024-04-13T16:14:54.287869Z  INFO rocket::server: Graceful shutdown completed successfully.    
+2024-04-13T16:20:13.779734Z  INFO rocket::launch: Configured for [4mdebug[0m.    
+2024-04-13T16:20:13.779916Z  INFO rocket::launch::_: address: [1;39m127.0.0.1[0m    
+2024-04-13T16:20:13.780032Z  INFO rocket::launch::_: port: [1;39m8000[0m    
+2024-04-13T16:20:13.780135Z  INFO rocket::launch::_: workers: [1;39m8[0m    
+2024-04-13T16:20:13.780227Z  INFO rocket::launch::_: max blocking threads: [1;39m512[0m    
+2024-04-13T16:20:13.780335Z  INFO rocket::launch::_: ident: [1;39mRocket[0m    
+2024-04-13T16:20:13.780454Z  INFO rocket::launch::_: IP header: [1;39mX-Real-IP[0m    
+2024-04-13T16:20:13.780668Z  INFO rocket::launch::_: limits: [1;39mbytes = 8KiB, data-form = 2MiB, file = 1MiB, form = 32KiB, json = 1MiB, msgpack = 1MiB, string = 8KiB[0m    
+2024-04-13T16:20:13.780860Z  INFO rocket::launch::_: temp dir: [1;39mC:\Users\34898\AppData\Local\Temp\[0m    
+2024-04-13T16:20:13.781072Z  INFO rocket::launch::_: http/2: [1;39mtrue[0m    
+2024-04-13T16:20:13.781233Z  INFO rocket::launch::_: keep-alive: [1;39m5[0m[1;39ms[0m    
+2024-04-13T16:20:13.781376Z  INFO rocket::launch::_: tls: [1;39mdisabled[0m    
+2024-04-13T16:20:13.781552Z  INFO rocket::launch::_: shutdown: [1;39mctrlc = true, force = true, grace = 2s, mercy = 3s[0m    
+2024-04-13T16:20:13.781711Z  INFO rocket::launch::_: log level: [1;39mnormal[0m    
+2024-04-13T16:20:13.781908Z  INFO rocket::launch::_: cli colors: [1;39mtrue[0m    
+2024-04-13T16:20:13.782501Z  INFO rocket::launch: [35mRoutes[0m:    
+2024-04-13T16:20:13.782845Z  INFO rocket::launch::_: [36m([0m[39mpost_authenticator[0m[36m)[0m [32mPOST[0m [4;34m/authenticator[0m[34m/authenticator[0m    
+2024-04-13T16:20:13.783192Z  INFO rocket::launch: [35mFairings[0m:    
+2024-04-13T16:20:13.783452Z  INFO rocket::launch::_: [1;39mShield[0m ([1;34mliftoff, response, singleton[0m)    
+2024-04-13T16:20:13.788161Z  INFO rocket::shield::shield: [35mShield[0m:    
+2024-04-13T16:20:13.788402Z  INFO rocket::shield::shield::_: X-Frame-Options: [39mSAMEORIGIN[0m    
+2024-04-13T16:20:13.788586Z  INFO rocket::shield::shield::_: Permissions-Policy: [39minterest-cohort=()[0m    
+2024-04-13T16:20:13.788756Z  INFO rocket::shield::shield::_: X-Content-Type-Options: [39mnosniff[0m    
+2024-04-13T16:20:13.789057Z  WARN rocket::launch: [1;39mRocket has launched from [4mhttp://127.0.0.1:8000[0m    
+2024-04-13T16:20:31.510147Z  WARN rocket::server: Received SIGINT. Requesting shutdown.    
+2024-04-13T16:20:31.510759Z  INFO rocket::server: Shutdown requested. Waiting for pending I/O...    
+2024-04-13T16:20:31.511186Z  INFO rocket::server: Graceful shutdown completed successfully.    
+2024-04-13T16:21:47.329991Z  INFO rocket::launch: Configured for [4mdebug[0m.    
+2024-04-13T16:21:47.330203Z  INFO rocket::launch::_: address: [1;39m127.0.0.1[0m    
+2024-04-13T16:21:47.330299Z  INFO rocket::launch::_: port: [1;39m8000[0m    
+2024-04-13T16:21:47.330382Z  INFO rocket::launch::_: workers: [1;39m8[0m    
+2024-04-13T16:21:47.330467Z  INFO rocket::launch::_: max blocking threads: [1;39m512[0m    
+2024-04-13T16:21:47.330567Z  INFO rocket::launch::_: ident: [1;39mRocket[0m    
+2024-04-13T16:21:47.330665Z  INFO rocket::launch::_: IP header: [1;39mX-Real-IP[0m    
+2024-04-13T16:21:47.331032Z  INFO rocket::launch::_: limits: [1;39mbytes = 8KiB, data-form = 2MiB, file = 1MiB, form = 32KiB, json = 1MiB, msgpack = 1MiB, string = 8KiB[0m    
+2024-04-13T16:21:47.331481Z  INFO rocket::launch::_: temp dir: [1;39mC:\Users\34898\AppData\Local\Temp\[0m    
+2024-04-13T16:21:47.331750Z  INFO rocket::launch::_: http/2: [1;39mtrue[0m    
+2024-04-13T16:21:47.331940Z  INFO rocket::launch::_: keep-alive: [1;39m5[0m[1;39ms[0m    
+2024-04-13T16:21:47.332160Z  INFO rocket::launch::_: tls: [1;39mdisabled[0m    
+2024-04-13T16:21:47.332352Z  INFO rocket::launch::_: shutdown: [1;39mctrlc = true, force = true, grace = 2s, mercy = 3s[0m    
+2024-04-13T16:21:47.332602Z  INFO rocket::launch::_: log level: [1;39mnormal[0m    
+2024-04-13T16:21:47.332761Z  INFO rocket::launch::_: cli colors: [1;39mtrue[0m    
+2024-04-13T16:21:47.333178Z  INFO rocket::launch: [35mRoutes[0m:    
+2024-04-13T16:21:47.333371Z  INFO rocket::launch::_: [36m([0m[39mpost_authenticator[0m[36m)[0m [32mPOST[0m [34m/authenticator[0m    
+2024-04-13T16:21:47.333571Z  INFO rocket::launch: [35mFairings[0m:    
+2024-04-13T16:21:47.333735Z  INFO rocket::launch::_: [1;39mShield[0m ([1;34mliftoff, response, singleton[0m)    
+2024-04-13T16:21:47.337571Z  INFO rocket::shield::shield: [35mShield[0m:    
+2024-04-13T16:21:47.337837Z  INFO rocket::shield::shield::_: X-Content-Type-Options: [39mnosniff[0m    
+2024-04-13T16:21:47.337986Z  INFO rocket::shield::shield::_: X-Frame-Options: [39mSAMEORIGIN[0m    
+2024-04-13T16:21:47.338149Z  INFO rocket::shield::shield::_: Permissions-Policy: [39minterest-cohort=()[0m    
+2024-04-13T16:21:47.338443Z  WARN rocket::launch: [1;39mRocket has launched from [4mhttp://127.0.0.1:8000[0m    
+2024-04-13T16:21:51.651539Z  WARN rocket::server: Received SIGINT. Requesting shutdown.    
+2024-04-13T16:21:51.651857Z  INFO rocket::server: Shutdown requested. Waiting for pending I/O...    
+2024-04-13T16:21:51.652507Z  INFO rocket::server: Graceful shutdown completed successfully.    
