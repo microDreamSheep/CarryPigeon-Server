@@ -1,0 +1,16 @@
+[default]
+address = "127.0.0.1"
+port = 2024 
+workers = 16
+max_blocking = 512
+ident = "CarryPigeon"
+
+log_level = "normal"
+
+temp_dir = "/tmp"
+
+cli_colors = true
+
+[default.limits]
+json = "1 MiB"
+file = "5 MiB"

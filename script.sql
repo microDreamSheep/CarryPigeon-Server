@@ -14,4 +14,10 @@ create table "group"
     member json
 );
 
+create table temp_message
+(
+    "from" uuid not null,
+    "to"   uuid not null
+);
+
 

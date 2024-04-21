@@ -7,8 +7,8 @@
             "driver": "PostgreSQL",
             "name": "carrypigeon",
             "database": "carrypigeon",
-            "username": "shirasawa",
-            "password": "zrg"
+            "username": "postgres",
+            "password": "2006"
         }
     ]
 }
