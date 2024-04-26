@@ -29,14 +29,7 @@ async fn main() -> Result<(), rocket::Error> {
         .init();
 
     // test connect
-    match carrypigeon_server::dao::PG_POOL_PTR.await {
-        Ok(_) => {
-            tracing::info!("Successfully linked PostgreSQL");
-        }
-        Err(e) => {
-            tracing::error!("{:?}", e);
-        }
-    }
+    carrypigeon_server::dao::make_pg_pool_connect().await;
 
     //
     //

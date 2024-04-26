@@ -1,10 +1,26 @@
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{PgPool, Pool, Postgres};
+use once_cell::sync::OnceCell;
 
-async_static::async_static! {
-    pub static ref PG_POOL_PTR :Result<Pool<Postgres>,sqlx::Error> = PgPoolOptions::new()
-     .max_connections(5)
-     //.connect("postgres://carrypigeon:carrypigeon@localhost/carrypigeon").await;
-     .connect("postgres://postgres:2006@localhost/carrypigeon").await;
+pub static PG_POOL: OnceCell<PgPool> = OnceCell::new();
+
+#[inline]
+pub async fn make_pg_pool_connect() {
+    match Pool::<Postgres>::connect("postgres://postgres:2006@localhost/carrypigeon").await {
+        Ok(v) => {
+            match PG_POOL.set(v) {
+                Ok(_) => {
+                    tracing::info!("Successfully linked PostgreSQL");
+                }
+                Err(e) => {
+                    tracing::error!("{:?}",e);
+                }
+            }
+        }
+        Err(e) => {
+            tracing::error!("{}",e);
+        }
+    }
+     //.connect("postgres://carrypigeon:carrypigeon@localhost/carrypigeon").await
 }
 
 pub mod authenticator;
