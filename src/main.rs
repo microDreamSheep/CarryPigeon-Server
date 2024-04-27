@@ -35,9 +35,11 @@ async fn main() -> Result<(), rocket::Error> {
     //
     // rocket
     use carrypigeon_server::controller::authenticator::post_authenticator;
+    use carrypigeon_server::controller::message::get_message;
 
     let _rocket = rocket::build()
         .mount("/", routes![post_authenticator])
+        .mount("/message", routes![get_message])
         .launch()
         .await?;
     Ok(())

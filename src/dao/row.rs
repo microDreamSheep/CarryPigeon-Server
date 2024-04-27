@@ -21,4 +21,5 @@ pub struct ChatPostTable {
     pub file_path: String,
     pub json: sqlx::types::JsonValue,
     pub timestamp: sqlx::types::chrono::DateTime<Utc>,
+    pub id: i64,
 }
