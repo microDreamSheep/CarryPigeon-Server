@@ -25,6 +25,6 @@ pub async fn make_pg_pool_connect() {
     //.connect("postgres://carrypigeon:carrypigeon@localhost/carrypigeon").await
 }
 
-pub mod authenticator;
+pub mod user;
 pub mod chat;
 pub mod row;

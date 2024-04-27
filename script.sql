@@ -1,8 +1,8 @@
 create table "user"
 (
     uuid     uuid    not null,
-    username varchar not null,
-    password varchar not null,
+    username text    not null,
+    password text    not null,
     status   varchar not null
 );
 
@@ -15,8 +15,14 @@ create table "group"
     member json
 );
 
-create table temp_message
+create table private_temp_message
 (
-    "from" uuid not null,
-    "to"   uuid not null
+    "from"    uuid      not null,
+    "to"      uuid      not null,
+    text      text,
+    file_path text,
+    json      json,
+    timestamp timestamp not null
 );
+
+

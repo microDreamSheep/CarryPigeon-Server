@@ -1,4 +1,6 @@
-pub enum Status{
+use sqlx::types::chrono::Utc;
+
+pub enum Status {
     Online,
     Offline,
 }
@@ -9,4 +11,14 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub status: String,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct ChatPostTable {
+    pub from: sqlx::types::Uuid,
+    pub to: sqlx::types::Uuid,
+    pub text: String,
+    pub file_path: String,
+    pub json: sqlx::types::JsonValue,
+    pub timestamp: sqlx::types::chrono::DateTime<Utc>,
 }
