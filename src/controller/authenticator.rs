@@ -24,11 +24,8 @@ pub async fn post_authenticator(authinfo: Form<AuthInfo>) -> &'static str {
     // 验证密码
     let matcher = crate::dao::user::get_password(id).await;
     if matcher == authinfo.password {
-        if crate::dao::user::update_status(
-            id,
-            to_userstatus(crate::dao::row::Status::Online).await,
-        )
-        .await
+        if crate::dao::user::update_status(id, to_userstatus(crate::dao::row::Status::Online).await)
+            .await
         {
             "true"
         } else {
