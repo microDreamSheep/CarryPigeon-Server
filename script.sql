@@ -1,6 +1,6 @@
 create table "user"
 (
-    uuid     uuid    not null,
+    uuid     bigint  not null,
     username text    not null,
     password text    not null,
     status   varchar not null
@@ -8,7 +8,7 @@ create table "user"
 
 create table "group"
 (
-    id     uuid,
+    id     bigint,
     name   varchar,
     owner  json,
     admin  json,
@@ -17,12 +17,18 @@ create table "group"
 
 create table private_temp_message
 (
-    "from"    uuid      not null,
-    "to"      uuid      not null,
+    "from"    bigint    not null,
+    "to"      bigint    not null,
     text      text,
     file_path text,
     json      json,
     timestamp timestamp not null
+);
+
+create table user_token
+(
+    uuid  bigint not null,
+    token json   not null
 );
 
 

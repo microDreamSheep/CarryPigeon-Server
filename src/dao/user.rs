@@ -2,8 +2,9 @@ use tracing::instrument;
 
 use super::PG_POOL;
 
+#[inline]
 #[instrument]
-pub async fn get_password(uuid: sqlx::types::Uuid) -> String {
+pub async fn get_password(uuid: i64) -> String {
     let rows_temp =
         sqlx::query_as::<_, super::row::User>("SELECT password FROM user WHERE uuid = $1")
             .bind(uuid)
@@ -11,7 +12,7 @@ pub async fn get_password(uuid: sqlx::types::Uuid) -> String {
             .await;
 
     match rows_temp {
-        Ok(v) => v.password,
+        Ok(v) => return v.password,
         Err(e) => {
             tracing::error!("{}", e);
             return "".to_string();
@@ -19,8 +20,9 @@ pub async fn get_password(uuid: sqlx::types::Uuid) -> String {
     }
 }
 
+#[inline]
 #[instrument]
-pub async fn get_status(uuid: sqlx::types::Uuid) -> String {
+pub async fn get_status(uuid: i64) -> String {
     let rows_temp =
         sqlx::query_as::<_, super::row::User>("SELECT status FROM user WHERE uuid = $1")
             .bind(uuid)
@@ -35,8 +37,9 @@ pub async fn get_status(uuid: sqlx::types::Uuid) -> String {
     }
 }
 
+#[inline]
 #[instrument]
-pub async fn get_username(uuid: sqlx::types::Uuid) -> String {
+pub async fn get_username(uuid: i64) -> String {
     let rows_temp =
         sqlx::query_as::<_, super::row::User>("SELECT username FROM user WHERE uuid = $1")
             .bind(uuid)
@@ -51,8 +54,9 @@ pub async fn get_username(uuid: sqlx::types::Uuid) -> String {
     }
 }
 
+#[inline]
 #[instrument]
-pub async fn update_status(uuid: sqlx::types::Uuid, status: String) -> bool {
+pub async fn update_status(uuid: i64, status: String) -> bool {
     let rows_temp =
         sqlx::query_as::<_, super::row::User>("UPDATE user SET status = $1 uuid WHERE uuid = $2")
             .bind(status)
