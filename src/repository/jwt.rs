@@ -1,4 +1,4 @@
-use jsonwebtoken::{encode, EncodingKey, Header, errors::Error};
+use jsonwebtoken::{encode, errors::Error, EncodingKey, Header};
 use once_cell::sync::OnceCell;
 use rand::rngs::ThreadRng;
 use rsa::{traits::PublicKeyParts, RsaPrivateKey, RsaPublicKey};
@@ -32,7 +32,7 @@ pub fn encrypt(
     iss: String,
     nbf: usize,
     sub: String,
-) -> Result<String,Error> {
+) -> Result<String, Error> {
     let user_claims = Claims {
         aud,
         exp,
