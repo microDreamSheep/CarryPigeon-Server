@@ -6,7 +6,7 @@ use super::PG_POOL;
 #[instrument]
 pub async fn get_password(uuid: i64) -> String {
     let rows_temp =
-        sqlx::query_as::<_, super::row::User>("SELECT password FROM user WHERE uuid = $1")
+        sqlx::query_as::<_, super::row::User>("SELECT * FROM public.user WHERE uuid = $1")
             .bind(uuid)
             .fetch_one(PG_POOL.get().unwrap())
             .await;
@@ -24,7 +24,7 @@ pub async fn get_password(uuid: i64) -> String {
 #[instrument]
 pub async fn get_status(uuid: i64) -> String {
     let rows_temp =
-        sqlx::query_as::<_, super::row::User>("SELECT status FROM user WHERE uuid = $1")
+        sqlx::query_as::<_, super::row::User>("SELECT * FROM public.user WHERE uuid = $1")
             .bind(uuid)
             .fetch_one(PG_POOL.get().unwrap())
             .await;
@@ -41,7 +41,7 @@ pub async fn get_status(uuid: i64) -> String {
 #[instrument]
 pub async fn get_username(uuid: i64) -> String {
     let rows_temp =
-        sqlx::query_as::<_, super::row::User>("SELECT username FROM user WHERE uuid = $1")
+        sqlx::query_as::<_, super::row::User>("SELECT * FROM public.user WHERE uuid = $1")
             .bind(uuid)
             .fetch_one(PG_POOL.get().unwrap())
             .await;
@@ -58,10 +58,10 @@ pub async fn get_username(uuid: i64) -> String {
 #[instrument]
 pub async fn update_status(uuid: i64, status: String) -> bool {
     let rows_temp =
-        sqlx::query_as::<_, super::row::User>("UPDATE user SET status = $1 uuid WHERE uuid = $2")
+        sqlx::query("UPDATE public.user SET status = $1 WHERE uuid = $2")
             .bind(status)
             .bind(uuid)
-            .fetch_one(PG_POOL.get().unwrap())
+            .execute(PG_POOL.get().unwrap())
             .await;
 
     match rows_temp {

@@ -16,8 +16,6 @@ async fn to_userstatus(matcher: crate::dao::row::Status) -> String {
 #[allow(private_interfaces)]
 #[rocket::post("/authenticator", data = "<authinfo>")]
 pub async fn post_authenticator(authinfo: Form<AuthInfo>) -> &'static str {
-    // 构建uuid
-
     // 验证密码
     let matcher = crate::dao::user::get_password(authinfo.uuid).await;
     let result;

@@ -9,7 +9,7 @@ pub static PRIVATE_KEY: OnceCell<RsaPrivateKey> = OnceCell::new();
 pub static PUBLIC_KEY: OnceCell<RsaPublicKey> = OnceCell::new();
 const RNG: OnceCell<ThreadRng> = OnceCell::new();
 
-pub fn generate_key() {
+pub async fn generate_key() {
     let rng_temp = &mut rand::thread_rng();
     RNG.set(rng_temp.to_owned()).unwrap();
     PRIVATE_KEY
@@ -21,7 +21,7 @@ pub fn generate_key() {
 }
 
 #[allow(const_item_mutation)]
-pub fn encrypt(
+pub async fn encrypt(
     aud: String,
     exp: usize,
     iat: usize,

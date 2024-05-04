@@ -29,8 +29,9 @@ async fn main() -> Result<(), rocket::Error> {
         .init();
 
     // generate_key
+    /// rand 创建随机数时会拖慢启动速度，待优化
     use carrypigeon_server::repository::jwt::generate_key;
-    generate_key();
+    generate_key().await;
 
     // connect database
     carrypigeon_server::dao::make_pg_pool_connect().await;
