@@ -28,7 +28,12 @@ async fn main() -> Result<(), rocket::Error> {
         .with(file_layer)
         .init();
 
-    // test connect
+
+    // generate_key
+    use carrypigeon_server::repository::jwt::generate_key;
+    generate_key();
+    
+    // connect database
     carrypigeon_server::dao::make_pg_pool_connect().await;
 
     //
