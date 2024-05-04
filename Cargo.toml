@@ -9,7 +9,7 @@ edition = "2021"
 minori-jwt = { path = "./minori-jwt"}
 
 once_cell = "1.19.0"
-rocket = { version = "0.5.0", features = ["secrets"]}
+rocket = "0.5.0"
 sqlx = { version = "0.7.4", features = ["runtime-tokio","postgres","json","chrono"]}
 tracing = "0.1.40"
 tracing-appender = "0.2.3"

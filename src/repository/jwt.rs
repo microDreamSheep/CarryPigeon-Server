@@ -1,23 +1,19 @@
 use jsonwebtoken::{encode, errors::Error, EncodingKey, Header};
+use minori_jwt::claims::Claims;
 use once_cell::sync::OnceCell;
 use rand::rngs::ThreadRng;
 use rsa::{traits::PublicKeyParts, RsaPrivateKey, RsaPublicKey};
-
-use minori_jwt::claims::Claims;
 
 const BITS: usize = 2048;
 pub static PRIVATE_KEY: OnceCell<RsaPrivateKey> = OnceCell::new();
 pub static PUBLIC_KEY: OnceCell<RsaPublicKey> = OnceCell::new();
 const RNG: OnceCell<ThreadRng> = OnceCell::new();
 
-#[allow(const_item_mutation)]
 pub fn generate_key() {
-    RNG.set(rand::thread_rng()).unwrap();
+    let rng_temp = &mut rand::thread_rng();
+    RNG.set(rng_temp.to_owned()).unwrap();
     PRIVATE_KEY
-        .set(
-            RsaPrivateKey::new(RNG.get_mut().unwrap(), BITS)
-                .expect("failed to generate private key"),
-        )
+        .set(RsaPrivateKey::new(rng_temp, BITS).expect("failed to generate key"))
         .unwrap();
     PUBLIC_KEY
         .set(PRIVATE_KEY.get().unwrap().to_public_key())
