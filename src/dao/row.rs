@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::Utc;
 
 pub enum Status {
@@ -13,7 +14,7 @@ pub struct User {
     pub status: String,
 }
 
-#[derive(sqlx::FromRow,Clone,Default)]
+#[derive(sqlx::FromRow, Clone, Default)]
 pub struct ChatOfflineMessage {
     pub from: i64,
     pub to: i64,
@@ -28,4 +29,16 @@ pub struct ChatOfflineMessage {
 pub struct UserToken {
     pub uuid: i64,
     pub token: sqlx::types::JsonValue,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct GobalMessage {
+    pub message_type: String,
+    pub from: i64,
+    pub to: i64,
+    pub text: String,
+    pub file: String,
+    pub json: String,
+    pub timestamp: String,
+    pub id: i64,
 }
