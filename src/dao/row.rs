@@ -13,7 +13,7 @@ pub struct User {
     pub status: String,
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow,Clone,Default)]
 pub struct ChatOfflineMessage {
     pub from: i64,
     pub to: i64,

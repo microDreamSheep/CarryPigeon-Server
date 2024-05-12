@@ -33,5 +33,5 @@ pub async fn post_authenticator(authinfo: Form<AuthInfo>) -> &'static str {
     } else {
         result = "false";
     }
-    return result;
+    result
 }

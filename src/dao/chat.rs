@@ -28,8 +28,8 @@ pub async fn get_line(
             ChatOfflineMessage {
                 from,
                 to,
-                text: "".to_string(),
-                file_path: "".to_string(),
+                text: String::new(),
+                file_path: String::new(),
                 json: serde_json::from_str(" ").unwrap(),
                 timestamp: chrono::Utc::now(),
                 id,
@@ -41,11 +41,12 @@ pub async fn get_line(
 #[inline]
 #[instrument]
 pub async fn get_offline_message(uuid: i64) -> Vec<ChatOfflineMessage> {
-    let row_temp =
-        sqlx::query_as::<_, ChatOfflineMessage>("SELECT * FORM public.private_temp_message WHERE to = $1")
-            .bind(uuid)
-            .fetch_all(PG_POOL.get().unwrap())
-            .await;
+    let row_temp = sqlx::query_as::<_, ChatOfflineMessage>(
+        "SELECT * FORM public.private_temp_message WHERE to = $1",
+    )
+    .bind(uuid)
+    .fetch_all(PG_POOL.get().unwrap())
+    .await;
 
     match row_temp {
         Ok(v) => {
@@ -53,16 +54,7 @@ pub async fn get_offline_message(uuid: i64) -> Vec<ChatOfflineMessage> {
         }
         Err(e) => {
             tracing::error!("{}", e);
-            let _tmp = ChatOfflineMessage {
-                from: todo!(),
-                to: todo!(),
-                text: "".to_string(),
-                file_path: "".to_string(),
-                json: serde_json::from_str(" ").unwrap(),
-                timestamp: chrono::Utc::now(),
-                id: todo!(),
-            };
-            return vec![_tmp];
+            return vec![];
         }
     }
 }
