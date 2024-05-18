@@ -1,4 +1,7 @@
+use chrono::{Duration, Utc};
 use rocket::{form::Form, FromForm};
+
+use crate::{dao::user::get_username, repository::jwt::authenticator_encrypt};
 
 #[derive(Debug, FromForm)]
 struct AuthInfo {
@@ -15,10 +18,9 @@ async fn to_userstatus(matcher: crate::dao::row::Status) -> String {
 
 #[allow(private_interfaces)]
 #[rocket::post("/authenticator", data = "<authinfo>")]
-pub async fn post_authenticator(authinfo: Form<AuthInfo>) -> &'static str {
+pub async fn post_authenticator(authinfo: Form<AuthInfo>) -> String {
     // 验证密码
     let matcher = crate::dao::user::get_password(authinfo.uuid).await;
-    let result;
     if matcher == authinfo.password {
         if crate::dao::user::update_status(
             authinfo.uuid,
@@ -26,12 +28,18 @@ pub async fn post_authenticator(authinfo: Form<AuthInfo>) -> &'static str {
         )
         .await
         {
-            result = "true";
+            let iat = Utc::now();
+            let exp = iat + Duration::hours(72);
+            authenticator_encrypt(
+                get_username(authinfo.uuid).await,
+                iat.timestamp(),
+                exp.timestamp(),
+            )
+            .await
         } else {
-            result = "false";
+            String::from("false")
         }
     } else {
-        result = "false";
+        String::from("false")
     }
-    result
 }

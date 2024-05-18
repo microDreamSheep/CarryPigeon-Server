@@ -1,25 +1,6 @@
-use jsonwebtoken::{encode, errors::Error, EncodingKey, Header};
-use minori_jwt::claims::Claims;
-use once_cell::sync::OnceCell;
-use rsa::{traits::PublicKeyParts, RsaPrivateKey, RsaPublicKey};
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use minori_jwt::claims::{Claims, RequiredClaims};
 
-const BITS: usize = 2048;
-pub static PRIVATE_KEY: OnceCell<RsaPrivateKey> = OnceCell::new();
-pub static PUBLIC_KEY: OnceCell<RsaPublicKey> = OnceCell::new();
-
-pub async fn generate_key() {
-    tokio::task::spawn_blocking(move || {
-        let rng_temp = &mut rand::thread_rng();
-        PRIVATE_KEY
-            .set(RsaPrivateKey::new(rng_temp, BITS).expect("failed to generate key"))
-            .unwrap();
-        PUBLIC_KEY
-            .set(PRIVATE_KEY.get().unwrap().to_public_key())
-            .unwrap();
-    });
-}
-
-#[allow(const_item_mutation)]
 pub async fn encrypt(
     aud: String,
     exp: usize,
@@ -27,19 +8,43 @@ pub async fn encrypt(
     iss: String,
     nbf: usize,
     sub: String,
-) -> Result<String, Error> {
+) -> String {
     let user_claims = Claims {
         aud,
         exp,
         iat,
         iss,
         nbf,
-        sub,
+        sub: sub.clone(),
     };
-    let result = encode(
+    match encode(
         &Header::default(),
         &user_claims,
-        &EncodingKey::from_rsa_der(PUBLIC_KEY.get().unwrap().n().to_string().as_bytes()),
-    );
-    result
+        &EncodingKey::from_secret(sub.as_bytes()),
+    ) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::error!("{}", e);
+            String::new()
+        }
+    }
+}
+
+pub async fn authenticator_encrypt(sub: String, iat: i64, exp: i64) -> String {
+    let user_claims = RequiredClaims {
+        sub: sub.clone(),
+        iat,
+        exp,
+    };
+    match encode(
+        &Header::new(Algorithm::HS512),
+        &user_claims,
+        &EncodingKey::from_secret(sub.as_bytes()),
+    ) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::error!("{}", e);
+            String::from("null")
+        }
+    }
 }

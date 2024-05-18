@@ -11,7 +11,7 @@ async fn main() -> Result<(), rocket::Error> {
     // 处理tracing输出和调用
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     // 输出到控制台中
-    // let formatting_layer = fmt::layer().pretty().with_writer(std::io::stderr);
+    //let formatting_layer = fmt::layer().pretty().with_writer(std::io::stderr);
     let formatting_layer = fmt::layer();
 
     // 输出到文件中
@@ -28,10 +28,6 @@ async fn main() -> Result<(), rocket::Error> {
         .with(file_layer)
         .init();
 
-    // generate_key
-    use carrypigeon_server::repository::jwt::generate_key;
-    generate_key().await;
-
     // connect database
     carrypigeon_server::dao::make_pg_pool_connect().await;
 
@@ -43,10 +39,8 @@ async fn main() -> Result<(), rocket::Error> {
     use carrypigeon_server::service::socket::{socket_offline_message, websocket_service};
 
     let _rocket = rocket::build()
-        .mount(
-            "/authenticator",
-            routes![post_authenticator, websocket_service],
-        )
+        .mount("/authenticator", routes![post_authenticator])
+        .mount("/service", routes![websocket_service])
         .mount("/message", routes![get_message])
         .mount("/socket", routes![socket_offline_message])
         .launch()
