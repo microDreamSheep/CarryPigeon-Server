@@ -1,5 +1,16 @@
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use minori_jwt::claims::{Claims, RequiredClaims};
+use rand::rngs::ThreadRng;
+use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey, RsaPublicKey};
+
+const BITS: usize = 2048;
+
+pub async fn generate_key() -> (RsaPrivateKey, RsaPublicKey, Box<ThreadRng>) {
+    let mut rng_temp: Box<ThreadRng> = Box::new(rand::thread_rng());
+    let private_key = RsaPrivateKey::new(&mut rng_temp, BITS).expect("failed to generate key");
+    let public_key = private_key.to_public_key();
+    (private_key, public_key, rng_temp)
+}
 
 pub async fn encrypt(
     aud: String,
@@ -9,6 +20,7 @@ pub async fn encrypt(
     nbf: usize,
     sub: String,
 ) -> String {
+    let (prviate_key, _public_key, mut _rng) = generate_key().await;
     let user_claims = Claims {
         aud,
         exp,
@@ -20,7 +32,13 @@ pub async fn encrypt(
     match encode(
         &Header::default(),
         &user_claims,
-        &EncodingKey::from_secret(sub.as_bytes()),
+        &EncodingKey::from_rsa_pem(
+            prviate_key
+                .to_pkcs8_pem(pkcs8::LineEnding::LF)
+                .unwrap()
+                .as_bytes(),
+        )
+        .unwrap(),
     ) {
         Ok(v) => v,
         Err(e) => {
@@ -31,15 +49,22 @@ pub async fn encrypt(
 }
 
 pub async fn authenticator_encrypt(sub: String, iat: i64, exp: i64) -> String {
+    let (prviate_key, _public_key, mut _rng) = generate_key().await;
     let user_claims = RequiredClaims {
         sub: sub.clone(),
         iat,
         exp,
     };
     match encode(
-        &Header::new(Algorithm::HS512),
+        &Header::new(Algorithm::RS256),
         &user_claims,
-        &EncodingKey::from_secret(sub.as_bytes()),
+        &EncodingKey::from_rsa_pem(
+            prviate_key
+                .to_pkcs8_pem(pkcs8::LineEnding::LF)
+                .unwrap()
+                .as_bytes(),
+        )
+        .unwrap(),
     ) {
         Ok(v) => v,
         Err(e) => {
