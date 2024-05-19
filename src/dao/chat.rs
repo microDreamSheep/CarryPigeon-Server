@@ -9,10 +9,10 @@ use super::PG_POOL;
 pub async fn get_line(
     from: i64,
     to: i64,
-    timestamp: sqlx::types::chrono::DateTime<Utc>,
+    timestamp: chrono::DateTime<Utc>,
     id: i64,
 ) -> ChatOfflineMessage {
-    let rows_temp = sqlx::query_as::<_, super::row::ChatOfflineMessage>(
+    let rows_temp = sqlx::query_as::<_, ChatOfflineMessage>(
         "SELECT * FORM public.private_temp_message WHERE from = $1, to = $2, timestamp = $3, id = $4",
     )
     .bind(from)
@@ -31,7 +31,7 @@ pub async fn get_line(
                 text: String::new(),
                 file_path: String::new(),
                 json: serde_json::from_str(" ").unwrap(),
-                timestamp: chrono::Utc::now(),
+                timestamp: Utc::now(),
                 id,
             }
         }
@@ -48,13 +48,13 @@ pub async fn get_offline_message(uuid: i64) -> Vec<ChatOfflineMessage> {
     .fetch_all(PG_POOL.get().unwrap())
     .await;
 
-    match row_temp {
+    return match row_temp {
         Ok(v) => {
-            return v;
+            v
         }
         Err(e) => {
             tracing::error!("{}", e);
-            return vec![];
+            vec![]
         }
     }
 }

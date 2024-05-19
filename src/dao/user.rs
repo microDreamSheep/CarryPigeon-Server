@@ -11,11 +11,11 @@ pub async fn get_password(uuid: i64) -> String {
             .fetch_one(PG_POOL.get().unwrap())
             .await;
 
-    match rows_temp {
-        Ok(v) => return v.password,
+    return match rows_temp {
+        Ok(v) => v.password,
         Err(e) => {
             tracing::error!("{}", e);
-            return "".to_string();
+            "".to_string()
         }
     }
 }

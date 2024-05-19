@@ -1,29 +1,32 @@
 use rocket::form::Form;
 use rocket::futures::{SinkExt, StreamExt};
-use rocket::FromForm;
+use serde_json::from_str;
+use crate::dao::row::UserToken;
 
-#[derive(FromForm)]
-pub struct GetOfflineMessage {
-    uuid: i64,
-    token: String,
-}
+use crate::dao::user_token::check_token;
 
 #[rocket::get("/socket")]
 pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'static> {
     // 创建到client的websocket连接
     ws.channel(move |mut stream| {
         Box::pin(async move {
-            while let Some(message) = stream.next().await {
-                let _ = stream.send(message?).await;
+            let info:UserToken = from_str(stream.next().await.unwrap().unwrap().to_text().unwrap()).unwrap();
+            let auth_result = check_token(info.uuid,info.token).await;
+            if auth_result {
+                while let Some(message) = stream.next().await {
+                    let _ = stream.send(message?).await;
+                }
+                Ok(())
+            } else { 
+                Ok(())
             }
-            Ok(())
         })
     })
 }
 
 #[rocket::post("/send_offline_message", data = "<info>")]
 pub async fn socket_offline_message(
-    info: Form<GetOfflineMessage>,
+    info: Form<UserToken>,
     _ws: rocket_ws::WebSocket,
 ) -> rocket_ws::Stream!['static] {
     //todo!("验证Token");

@@ -1,3 +1,4 @@
+use rocket::FromForm;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::Utc;
 
@@ -21,14 +22,14 @@ pub struct ChatOfflineMessage {
     pub text: String,
     pub file_path: String,
     pub json: sqlx::types::JsonValue,
-    pub timestamp: sqlx::types::chrono::DateTime<Utc>,
+    pub timestamp: chrono::DateTime<Utc>,
     pub id: i64,
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, FromForm)]
 pub struct UserToken {
     pub uuid: i64,
-    pub token: sqlx::types::JsonValue,
+    pub token: String,
 }
 
 #[derive(Deserialize, Serialize)]
