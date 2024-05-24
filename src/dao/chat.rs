@@ -49,12 +49,10 @@ pub async fn get_offline_message(uuid: i64) -> Vec<ChatOfflineMessage> {
     .await;
 
     return match row_temp {
-        Ok(v) => {
-            v
-        }
+        Ok(v) => v,
         Err(e) => {
             tracing::error!("{}", e);
             vec![]
         }
-    }
+    };
 }

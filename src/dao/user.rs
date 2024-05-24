@@ -17,7 +17,7 @@ pub async fn get_password(uuid: i64) -> String {
             tracing::error!("{}", e);
             "".to_string()
         }
-    }
+    };
 }
 
 #[inline]

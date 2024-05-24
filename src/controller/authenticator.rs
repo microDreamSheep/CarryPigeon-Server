@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use rocket::{form::Form, FromForm};
 
-use crate::{dao::user::get_username, repository::jwt::authenticator_encrypt};
+use crate::repository::jwt::authenticator_encrypt;
 
 #[derive(Debug, FromForm)]
 struct AuthInfo {
@@ -9,7 +9,7 @@ struct AuthInfo {
     password: String,
 }
 #[inline]
-async fn to_userstatus(matcher: crate::dao::row::Status) -> String {
+async fn to_user_status(matcher: crate::dao::row::Status) -> String {
     match matcher {
         crate::dao::row::Status::Online => "Online".to_string(),
         crate::dao::row::Status::Offline => "Offline".to_string(),
@@ -24,14 +24,14 @@ pub async fn post_authenticator(info: Form<AuthInfo>) -> String {
     if matcher == info.password {
         if crate::dao::user::update_status(
             info.uuid,
-            to_userstatus(crate::dao::row::Status::Online).await,
+            to_user_status(crate::dao::row::Status::Online).await,
         )
         .await
         {
             let iat = Utc::now();
             let exp = iat + Duration::days(72);
             authenticator_encrypt(
-                get_username(info.uuid).await,
+                info.uuid,
                 iat.timestamp(),
                 exp.timestamp(),
             )

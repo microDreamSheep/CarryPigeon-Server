@@ -1,7 +1,13 @@
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use minori_jwt::claims::{Claims, RequiredClaims};
+use crate::repository::claims::{Claims, RequiredClaims};
 use rand::rngs::ThreadRng;
-use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey, RsaPublicKey};
+use rsa::{
+    pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
+    RsaPrivateKey, RsaPublicKey,
+};
+use tokio::task::spawn;
+
+use crate::dao::user_token::push_token;
 
 const BITS: usize = 2048;
 
@@ -20,7 +26,7 @@ pub async fn encrypt(
     nbf: usize,
     sub: String,
 ) -> String {
-    let (prviate_key, _public_key, mut _rng) = generate_key().await;
+    let (private_key, _public_key, mut _rng) = generate_key().await;
     let user_claims = Claims {
         aud,
         exp,
@@ -30,15 +36,10 @@ pub async fn encrypt(
         sub: sub.clone(),
     };
     match encode(
-        &Header::default(),
+        &Header::new(Algorithm::RS256),
         &user_claims,
-        &EncodingKey::from_rsa_pem(
-            prviate_key
-                .to_pkcs8_pem(pkcs8::LineEnding::LF)
-                .unwrap()
-                .as_bytes(),
-        )
-        .unwrap(),
+        &EncodingKey::from_rsa_pem(private_key.to_pkcs8_pem(LineEnding::LF).unwrap().as_bytes())
+            .unwrap(),
     ) {
         Ok(v) => v,
         Err(e) => {
@@ -48,25 +49,25 @@ pub async fn encrypt(
     }
 }
 
-pub async fn authenticator_encrypt(sub: String, iat: i64, exp: i64) -> String {
-    let (prviate_key, _public_key, mut _rng) = generate_key().await;
+pub async fn authenticator_encrypt(sub: i64, iat: i64, exp: i64) -> String {
+    let (private_key, public_key, mut _rng) = generate_key().await;
     let user_claims = RequiredClaims {
-        sub: sub.clone(),
+        sub,
         iat,
         exp,
     };
     match encode(
         &Header::new(Algorithm::RS256),
         &user_claims,
-        &EncodingKey::from_rsa_pem(
-            prviate_key
-                .to_pkcs8_pem(pkcs8::LineEnding::LF)
-                .unwrap()
-                .as_bytes(),
-        )
-        .unwrap(),
+        &EncodingKey::from_rsa_pem(private_key.to_pkcs8_pem(LineEnding::LF).unwrap().as_bytes())
+            .unwrap(),
     ) {
-        Ok(v) => v,
+        Ok(v) => {
+            spawn(async move {
+                push_token(sub, public_key.to_public_key_pem(LineEnding::CR).unwrap()).await;
+            });
+            v
+        }
         Err(e) => {
             tracing::error!("{}", e);
             String::from("null")

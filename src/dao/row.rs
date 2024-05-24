@@ -26,10 +26,10 @@ pub struct ChatOfflineMessage {
     pub id: i64,
 }
 
-#[derive(sqlx::FromRow, Deserialize, Serialize, FromForm)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, FromForm, Default)]
 pub struct UserToken {
     pub uuid: i64,
-    pub token: String,
+    pub public_key: String,
 }
 
 #[derive(Deserialize, Serialize)]

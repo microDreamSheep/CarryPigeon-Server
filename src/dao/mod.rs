@@ -1,9 +1,9 @@
-use once_cell::sync::OnceCell;
 use redis::Client;
 use sqlx::{pool::PoolOptions, PgPool, Postgres};
+use std::sync::OnceLock;
 
-pub static PG_POOL: OnceCell<PgPool> = OnceCell::new();
-pub static REDIS_POOL: OnceCell<Client> = OnceCell::new();
+pub static PG_POOL: OnceLock<PgPool> = OnceLock::new();
+pub static REDIS_POOL: OnceLock<Client> = OnceLock::new();
 
 #[inline]
 pub async fn make_pg_pool_connect() {

@@ -27,8 +27,8 @@ create table private_temp_message
 
 create table user_token
 (
-    uuid  bigint not null,
-    token json   not null
+    uuid       bigint  not null,
+    public_key varchar not null
 );
 
 
