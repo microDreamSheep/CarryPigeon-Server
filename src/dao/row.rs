@@ -32,7 +32,7 @@ pub struct UserToken {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct GobalMessage {
+pub struct GlobalMessage {
     pub message_type: String,
     pub from: i64,
     pub to: i64,
