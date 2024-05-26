@@ -56,7 +56,7 @@ pub async fn get_username(uuid: i64) -> String {
 
 #[inline]
 #[instrument]
-pub async fn update_status(uuid: i64, status: String) -> bool {
+pub async fn update_status(uuid: i64, status: &str) -> bool {
     let rows_temp = sqlx::query("UPDATE public.user SET status = $1 WHERE uuid = $2")
         .bind(status)
         .bind(uuid)

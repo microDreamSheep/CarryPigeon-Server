@@ -1,5 +1,6 @@
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use crate::repository::claims::RequiredClaims;
+use chrono::Utc;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 
 use super::row::UserToken;
 use super::PG_POOL;
@@ -51,8 +52,15 @@ pub async fn check_token(uuid: i64, token: String) -> bool {
             },
             &Validation::new(Algorithm::RS256),
         ) {
-            Ok(_v) => {
-                return true;
+            Ok(v) => {
+                // 验证token的有效时间
+                let time = Utc::now().timestamp();
+                if v.claims.exp >= time {
+                    return true;
+                } else if v.claims.exp < time {
+                    return false;
+                }
+                return false;
             }
             Err(_) => {
                 // 该PublicKey无法解密，但可以继续尝试其他PublicKey，故continue

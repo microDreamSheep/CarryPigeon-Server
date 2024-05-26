@@ -17,12 +17,12 @@ create table "group"
 
 create table private_temp_message
 (
-    "from"    bigint    not null,
-    "to"      bigint    not null,
+    "from"    bigint  not null,
+    "to"      bigint  not null,
     text      text,
     file_path text,
     json      json,
-    timestamp timestamp not null
+    timestamp varchar not null
 );
 
 create table user_token

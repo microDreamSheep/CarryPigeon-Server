@@ -31,7 +31,7 @@ pub async fn get_line(
                 text: String::new(),
                 file_path: String::new(),
                 json: serde_json::from_str(" ").unwrap(),
-                timestamp: Utc::now(),
+                timestamp: Utc::now().to_string(),
                 id,
             }
         }

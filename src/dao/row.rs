@@ -1,8 +1,7 @@
 use rocket::FromForm;
 use serde::{Deserialize, Serialize};
-use sqlx::types::chrono::Utc;
 
-pub enum Status {
+pub enum UserStatus {
     Online,
     Offline,
 }
@@ -15,14 +14,14 @@ pub struct User {
     pub status: String,
 }
 
-#[derive(sqlx::FromRow, Clone, Default)]
+#[derive(sqlx::FromRow, Clone, Default, Deserialize, Serialize)]
 pub struct ChatOfflineMessage {
     pub from: i64,
     pub to: i64,
     pub text: String,
     pub file_path: String,
     pub json: sqlx::types::JsonValue,
-    pub timestamp: chrono::DateTime<Utc>,
+    pub timestamp: String,
     pub id: i64,
 }
 

@@ -10,7 +10,7 @@ pub async fn make_pg_pool_connect() {
     // PostgreSQL连接
     match PoolOptions::<Postgres>::new()
         .max_connections(15)
-        .connect("postgres://shirasawa:zrg@localhost/carrypigeon")
+        .connect("postgres://carrypigeon:carrypigeon@localhost/carrypigeon")
         //.connect("postgres://carrypigeon:carrypigeon@localhost/carrypigeon")
         .await
     {

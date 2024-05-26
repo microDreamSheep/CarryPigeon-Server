@@ -1,5 +1,6 @@
-use crate::dao::row::UserToken;
-use rocket::form::Form;
+use crate::controller::authenticator::to_user_status;
+use crate::dao::row::{ChatOfflineMessage, UserStatus, UserToken};
+use crate::dao::user::update_status;
 use rocket::futures::{SinkExt, StreamExt};
 use serde_json::from_str;
 
@@ -10,18 +11,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
     // 创建到client的websocket连接
     ws.channel(move |mut stream| {
         Box::pin(async move {
-            // 提取信息
-            /*let info: UserToken = from_str(
-                stream
-                    .next()
-                    .await
-                    .ok_or("")
-                    .unwrap()
-                    .unwrap()
-                    .to_text()
-                    .unwrap(),
-            )
-            .unwrap();*/
+            // 最终可获得UserToken
             let info: UserToken = match stream.next().await {
                 Some(v) => match v {
                     Ok(v) => match from_str(v.to_text().unwrap()) {
@@ -38,11 +28,16 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 },
                 None => UserToken::default(),
             };
+
             let auth_result = check_token(info.uuid, info.public_key).await;
             if auth_result {
+                socket_offline_message(info.uuid).await;
+                update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
                 while let Some(message) = stream.next().await {
+                    //todo!("信息处理服务");
                     let _ = stream.send(message?).await;
                 }
+                update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;
                 Ok(())
             } else {
                 Ok(())
@@ -51,21 +46,23 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
     })
 }
 
-#[rocket::post("/send_offline_message", data = "<info>")]
-pub async fn socket_offline_message(
-    info: Form<UserToken>,
-    _ws: rocket_ws::WebSocket,
-) -> rocket_ws::Stream!['static] {
-    //todo!("验证Token");
+/// 获取离线时的信息
+async fn socket_offline_message(uuid: i64) -> Vec<Vec<u8>> {
+    let messages = crate::dao::chat::get_offline_message(uuid).await;
+    let mut vec_messages_json = vec![];
 
-    let messages = crate::dao::chat::get_offline_message(info.uuid).await;
-
-    rocket_ws::Stream! { _ws =>
-        for result in messages {
-            yield result.text.into();
-            yield result.file_path.into();
-            yield result.json.to_string().into();
-            yield result.timestamp.to_rfc2822().into();
-        }
+    for i in messages {
+        let temp_chat_offline_message = ChatOfflineMessage {
+            from: i.from,
+            to: i.to,
+            text: i.text,
+            file_path: i.file_path,
+            json: i.json,
+            timestamp: i.timestamp,
+            id: i.id,
+        };
+        let temp_json = serde_json::to_vec(&temp_chat_offline_message).unwrap();
+        vec_messages_json.push(temp_json);
     }
+    vec_messages_json
 }
