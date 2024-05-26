@@ -1,10 +1,12 @@
 use crate::repository::claims::RequiredClaims;
 use chrono::Utc;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use tracing::instrument;
 
 use super::row::UserToken;
 use super::PG_POOL;
 
+#[instrument]
 pub async fn push_token(uuid: i64, public_key: String) -> bool {
     let rows_temp = sqlx::query("INSERT INTO public.user_token VALUES($1 , $2)")
         .bind(uuid)
@@ -15,6 +17,7 @@ pub async fn push_token(uuid: i64, public_key: String) -> bool {
 }
 
 /// 获取该用户的所有token公钥
+#[instrument]
 async fn get_all_token(uuid: i64) -> Vec<String> {
     let rows_temp =
         match sqlx::query_as::<_, UserToken>("SELECT * FORM public.user_token WHERE uuid = $1")
@@ -36,6 +39,7 @@ async fn get_all_token(uuid: i64) -> Vec<String> {
 }
 
 /// 匹配并验证token
+#[instrument]
 pub async fn check_token(uuid: i64, token: String) -> bool {
     let token_vec = get_all_token(uuid).await;
 

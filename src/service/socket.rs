@@ -1,5 +1,5 @@
 use crate::controller::authenticator::to_user_status;
-use crate::dao::row::{ChatOfflineMessage, UserStatus, UserToken};
+use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
 use rocket::futures::{SinkExt, StreamExt};
 use serde_json::from_str;
@@ -48,18 +48,19 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
 /// 获取离线时的信息
 async fn socket_offline_message(uuid: i64) -> Vec<Vec<u8>> {
-    let messages = crate::dao::chat::get_offline_message(uuid).await;
+    let messages = crate::dao::private_message::get_offline_message(uuid).await;
     let mut vec_messages_json = vec![];
 
     for i in messages {
-        let temp_chat_offline_message = ChatOfflineMessage {
+        let temp_chat_offline_message = GlobalMessage {
+            message_type: -1,
             from: i.from,
             to: i.to,
             text: i.text,
-            file_path: i.file_path,
+            file: i.file,
             json: i.json,
             timestamp: i.timestamp,
-            id: i.id,
+            message_id: i.message_id,
         };
         let temp_json = serde_json::to_vec(&temp_chat_offline_message).unwrap();
         vec_messages_json.push(temp_json);

@@ -28,7 +28,8 @@ pub async fn make_pg_pool_connect() {
     }
 }
 
-pub mod chat;
+pub mod group_message;
+pub mod private_message;
 pub mod row;
 pub mod user;
 pub mod user_token;

@@ -2,7 +2,6 @@ use tracing::instrument;
 
 use super::PG_POOL;
 
-#[inline]
 #[instrument]
 pub async fn get_password(uuid: i64) -> String {
     let rows_temp =
@@ -20,7 +19,6 @@ pub async fn get_password(uuid: i64) -> String {
     };
 }
 
-#[inline]
 #[instrument]
 pub async fn get_status(uuid: i64) -> String {
     let rows_temp =
@@ -37,7 +35,6 @@ pub async fn get_status(uuid: i64) -> String {
     }
 }
 
-#[inline]
 #[instrument]
 pub async fn get_username(uuid: i64) -> String {
     let rows_temp =
@@ -54,7 +51,6 @@ pub async fn get_username(uuid: i64) -> String {
     }
 }
 
-#[inline]
 #[instrument]
 pub async fn update_status(uuid: i64, status: &str) -> bool {
     let rows_temp = sqlx::query("UPDATE public.user SET status = $1 WHERE uuid = $2")

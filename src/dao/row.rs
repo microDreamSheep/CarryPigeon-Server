@@ -31,14 +31,18 @@ pub struct UserToken {
     pub public_key: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
 pub struct GlobalMessage {
-    pub message_type: String,
+    // message_type
+    // -1 -> all
+    // 0 -> group
+    // 1 -> private_message
+    pub message_type: i8,
     pub from: i64,
     pub to: i64,
     pub text: String,
     pub file: String,
     pub json: String,
     pub timestamp: String,
-    pub id: i64,
+    pub message_id: i64,
 }

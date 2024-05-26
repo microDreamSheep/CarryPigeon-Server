@@ -10,11 +10,17 @@ struct GetMessageInfo {
 }
 
 #[tracing::instrument]
-#[rocket::get("/private/getmessage", data = "<get_message>")]
+#[rocket::get("/private/get_message", data = "<get_message>")]
 pub async fn get_message(get_message: Form<GetMessageInfo>) {
     let timestamp =
         DateTime::<Utc>::from_timestamp_millis(get_message.timestamp.assume_utc().unix_timestamp())
             .unwrap();
 
-    crate::dao::chat::get_line(get_message.from, get_message.to, timestamp, get_message.id).await;
+    crate::dao::private_message::get_line(
+        get_message.from,
+        get_message.to,
+        timestamp,
+        get_message.id,
+    )
+    .await;
 }

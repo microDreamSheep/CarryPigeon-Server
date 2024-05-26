@@ -15,20 +15,32 @@ create table "group"
     member json
 );
 
-create table private_temp_message
+create table private_message
 (
-    "from"    bigint  not null,
-    "to"      bigint  not null,
-    text      text,
-    file_path text,
-    json      json,
-    timestamp varchar not null
+    "from"     bigint  not null,
+    "to"       bigint  not null,
+    text       text,
+    file_path  text,
+    json       json,
+    timestamp  varchar not null,
+    message_id bigint
 );
 
 create table user_token
 (
     uuid       bigint  not null,
     public_key varchar not null
+);
+
+create table group_message
+(
+    "from"     bigint  not null,
+    group_id   bigint  not null,
+    text       text,
+    file_path  text,
+    json       json,
+    timestamp  varchar not null,
+    message_id bigint
 );
 
 
