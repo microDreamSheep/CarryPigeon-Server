@@ -67,7 +67,7 @@ pub async fn get_latest_message_id(from: i64, to: i64) -> i64 {
 #[instrument]
 pub async fn update_private_message(message: &GlobalMessage) {
     let rows_temp =
-        sqlx::query("INSERT INTO public.private_message VALUES($1, $2, $3, $4, $5, $6, $7)")
+        sqlx::query(r#"INSERT INTO public.group_message ("from", "to", text, file_path, json, timestamp, message_id) VALUES($1, $2, $3, $4, $5, $6, $7)"#)
             .bind(message.from)
             .bind(message.to)
             .bind(message.text.clone())

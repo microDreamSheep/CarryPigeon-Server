@@ -18,17 +18,22 @@ pub struct User {
 pub struct ChatOfflineMessage {
     pub from: i64,
     pub to: i64,
-    pub text: String,
-    pub file_path: String,
-    pub json: sqlx::types::JsonValue,
-    pub timestamp: String,
-    pub id: i64,
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, FromForm, Default)]
 pub struct UserToken {
     pub uuid: i64,
     pub public_key: String,
+}
+
+#[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
+pub struct SocketMessage {
+    pub message_type: i8,
+    pub from: i64,
+    pub to: i64,
+    pub text: String,
+    pub file: String,
+    pub json: String,
 }
 
 #[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]

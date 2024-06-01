@@ -1,4 +1,4 @@
-use crate::dao::{group_message, private_message, row::GlobalMessage};
+use crate::dao::{group_message, private_message, row::{GlobalMessage, SocketMessage}};
 
 pub trait GroupMessageService {
     /// 向群内发送信息
@@ -28,6 +28,7 @@ pub trait SystemMessageService {
     fn receive_message();
 }
 
+#[derive(Clone, Copy)]
 pub struct MessageService;
 
 impl GroupMessageService for MessageService {
@@ -103,6 +104,45 @@ impl SystemMessageService for MessageService {
 }
 
 impl MessageService {
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// 发送信息
+    pub async fn send_message(&self, message: String) {
+        let json_value: SocketMessage = serde_json::from_str(message.as_str()).unwrap();
+        let timestamp = chrono::Utc::now().to_string();
+        // 处理群聊的信息
+        if json_value.message_type == 0 {
+            let _result = <MessageService as GroupMessageService>::send_message(
+                json_value.to,
+                json_value.from,
+                json_value.text,
+                json_value.file,
+                json_value.json,
+                timestamp,
+            )
+            .await;
+        }
+        // 处理私聊信息
+        else if json_value.message_type == 1 {
+            let _result = <MessageService as PrivateMessageService>::send_message(
+                json_value.to,
+                json_value.from,
+                json_value.text,
+                json_value.file,
+                json_value.json,
+                timestamp,
+            )
+            .await;
+        }
+    }
     /// 接受信息
-    pub fn receive_message() {}
+    pub fn receive_message(&self) {}
+}
+
+impl Default for MessageService {
+    fn default() -> Self {
+        Self::new()
+    }
 }

@@ -1,10 +1,14 @@
+use std::borrow::Borrow;
+
 use crate::controller::authenticator::to_user_status;
 use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
-use rocket::futures::{SinkExt, StreamExt};
+use rocket::futures::StreamExt;
 use serde_json::from_str;
 
 use crate::dao::user_token::check_token;
+
+use super::messages_service::MessageService;
 
 #[rocket::get("/socket")]
 pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'static> {
@@ -31,11 +35,15 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
             let auth_result = check_token(info.uuid, info.public_key).await;
             if auth_result {
+                // MessageService
+                let service = MessageService::new();
+
                 socket_offline_message(info.uuid).await;
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
                 while let Some(message) = stream.next().await {
                     //todo!("信息处理服务");
-                    let _ = stream.send(message?).await;
+                    //let _ = stream.send(message?).await;
+                    service.send_message(message?.to_string()).await;
                 }
                 update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;
                 Ok(())
