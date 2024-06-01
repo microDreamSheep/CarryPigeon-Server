@@ -1,4 +1,24 @@
-use crate::dao::{group_message, private_message, row::{GlobalMessage, SocketMessage}};
+use std::{
+    collections::HashMap,
+    sync::{
+        mpsc::{Receiver, Sender},
+        Mutex, OnceLock,
+    },
+};
+
+use crate::dao::{
+    group_message, private_message,
+    row::{GlobalMessage, SocketMessage},
+};
+
+#[allow(clippy::type_complexity)]
+pub static WS_HASHMAP: OnceLock<
+    Mutex<HashMap<i64, (Sender<GlobalMessage>, Receiver<GlobalMessage>)>>,
+> = OnceLock::new();
+
+pub fn init_ws_hashmap() {
+    let _ = WS_HASHMAP.set(Mutex::new(HashMap::new()));
+}
 
 pub trait GroupMessageService {
     /// 向群内发送信息
@@ -45,7 +65,6 @@ impl GroupMessageService for MessageService {
 
         // 构造数据
         let message_structure = GlobalMessage {
-            message_type: 0,
             from,
             to: group_id,
             text,
@@ -59,6 +78,15 @@ impl GroupMessageService for MessageService {
         group_message::update_group_message(&message_structure).await;
 
         // todo!("通知群内的人接收");
+        let _ = WS_HASHMAP
+            .get()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .get(&group_id)
+            .unwrap()
+            .0
+            .send(message_structure);
 
         false
     }
@@ -78,7 +106,6 @@ impl PrivateMessageService for MessageService {
 
         // 构造数据
         let message_structure = GlobalMessage {
-            message_type: 1,
             from,
             to,
             text,
@@ -92,6 +119,15 @@ impl PrivateMessageService for MessageService {
         private_message::update_private_message(&message_structure).await;
 
         //todo!("通知对方的人接收");
+        let _ = WS_HASHMAP
+            .get()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .get(&to)
+            .unwrap()
+            .0
+            .send(message_structure);
 
         false
     }

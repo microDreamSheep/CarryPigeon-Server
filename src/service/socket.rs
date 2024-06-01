@@ -1,12 +1,14 @@
+use std::sync::mpsc::channel;
+
 use crate::controller::authenticator::to_user_status;
 use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
-use rocket::futures::StreamExt;
+use rocket::futures::{SinkExt, StreamExt};
 use serde_json::from_str;
 
 use crate::dao::user_token::check_token;
 
-use super::messages_service::MessageService;
+use super::messages_service::{MessageService, WS_HASHMAP};
 
 #[rocket::get("/socket")]
 pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'static> {
@@ -35,13 +37,46 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
             if auth_result {
                 // MessageService
                 let service = MessageService::new();
+                let (tx, rx) = channel::<GlobalMessage>();
+                WS_HASHMAP
+                    .get()
+                    .unwrap()
+                    .lock()
+                    .unwrap()
+                    .insert(info.uuid, (tx, rx));
 
                 socket_offline_message(info.uuid).await;
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
                 while let Some(message) = stream.next().await {
                     //todo!("信息处理服务");
-                    //let _ = stream.send(message?).await;
                     service.send_message(message?.to_string()).await;
+                    if WS_HASHMAP
+                        .get()
+                        .unwrap()
+                        .lock()
+                        .unwrap()
+                        .get(&info.uuid)
+                        .unwrap()
+                        .1
+                        .try_recv()
+                        .is_ok()
+                    {
+                        let _ = stream.send(rocket_ws::Message::Text(
+                            serde_json::to_string(
+                                &WS_HASHMAP
+                                    .get()
+                                    .unwrap()
+                                    .lock()
+                                    .unwrap()
+                                    .get(&info.uuid)
+                                    .unwrap()
+                                    .1
+                                    .try_recv()
+                                    .unwrap(),
+                            )
+                            .unwrap(),
+                        ));
+                    }
                 }
                 update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;
                 Ok(())
@@ -59,7 +94,6 @@ async fn socket_offline_message(uuid: i64) -> Vec<Vec<u8>> {
 
     for i in messages {
         let temp_chat_offline_message = GlobalMessage {
-            message_type: -1,
             from: i.from,
             to: i.to,
             text: i.text,

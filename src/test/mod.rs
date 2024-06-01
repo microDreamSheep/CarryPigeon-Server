@@ -13,7 +13,6 @@ fn test_update_group_message() {
 async fn impl_update_group_message() {
     crate::dao::make_pg_pool_connect().await;
     let message = crate::dao::row::GlobalMessage {
-        message_type: 0,
         from: 1,
         to: 1,
         text: "hello".to_string(),

@@ -38,6 +38,17 @@ pub struct SocketMessage {
 
 #[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
 pub struct GlobalMessage {
+    pub from: i64,
+    pub to: i64,
+    pub text: String,
+    pub file: String,
+    pub json: String,
+    pub timestamp: String,
+    pub message_id: i64,
+}
+
+#[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
+pub struct GlobalMessageWithType {
     // message_type
     // -1 -> all
     // 0 -> group
