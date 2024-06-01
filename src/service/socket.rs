@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use crate::controller::authenticator::to_user_status;
 use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
