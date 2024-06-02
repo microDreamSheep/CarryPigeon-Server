@@ -30,6 +30,7 @@ async fn main() -> Result<(), rocket::Error> {
 
     // connect database
     carrypigeon_server::dao::make_pg_pool_connect().await;
+    carrypigeon_server::service::messages_service::init_ws_hashmap().await;
 
     //
     //

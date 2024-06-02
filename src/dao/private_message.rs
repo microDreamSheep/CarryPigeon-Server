@@ -11,7 +11,7 @@ pub async fn get_line(
     id: i64,
 ) -> GlobalMessage {
     let rows_temp = sqlx::query_as::<_, GlobalMessage>(
-        "SELECT * FORM public.private_message WHERE from = $1, to = $2, timestamp = $3, message_id = $4",
+        r#"SELECT * FROM public.private_message WHERE from = $1, "to" = $2, timestamp = $3, message_id = $4"#,
     )
     .bind(from)
     .bind(to)
@@ -31,7 +31,7 @@ pub async fn get_line(
 #[instrument]
 pub async fn get_offline_message(uuid: i64) -> Vec<GlobalMessage> {
     let row_temp =
-        sqlx::query_as::<_, GlobalMessage>("SELECT * FORM public.private_message WHERE to = $1")
+        sqlx::query_as::<_, GlobalMessage>(r#"SELECT * FROM public.private_message WHERE "to" = $1"#)
             .bind(uuid)
             .fetch_all(PG_POOL.get().unwrap())
             .await;

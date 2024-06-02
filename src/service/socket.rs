@@ -5,6 +5,7 @@ use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
 use rocket::futures::{SinkExt, StreamExt};
 use serde_json::from_str;
+use tracing::instrument;
 
 use crate::dao::user_token::check_token;
 

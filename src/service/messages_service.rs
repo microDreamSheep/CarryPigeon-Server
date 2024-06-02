@@ -16,7 +16,7 @@ pub static WS_HASHMAP: OnceLock<
     Mutex<HashMap<i64, (Sender<GlobalMessage>, Receiver<GlobalMessage>)>>,
 > = OnceLock::new();
 
-pub fn init_ws_hashmap() {
+pub async fn init_ws_hashmap() {
     let _ = WS_HASHMAP.set(Mutex::new(HashMap::new()));
 }
 
