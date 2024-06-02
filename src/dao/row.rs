@@ -62,3 +62,9 @@ pub struct GlobalMessageWithType {
     pub timestamp: String,
     pub message_id: i64,
 }
+
+pub enum MPSCMessage {
+    GlobalMessage(GlobalMessage),
+    GlobalMessageWithType(GlobalMessageWithType),
+    SocketMessage(SocketMessage),
+}

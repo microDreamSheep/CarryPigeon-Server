@@ -48,7 +48,6 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 socket_offline_message(info.uuid).await;
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
                 while let Some(message) = stream.next().await {
-                    //todo!("信息处理服务");
                     service.send_message(message?.to_string()).await;
                     if WS_HASHMAP
                         .get()
@@ -70,6 +69,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                                     .unwrap()
                                     .get(&info.uuid)
                                     .unwrap()
+                                    .clone()
                                     .1
                                     .try_recv()
                                     .unwrap(),
@@ -79,6 +79,18 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     }
                 }
                 update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;
+                drop(
+                    WS_HASHMAP
+                        .get()
+                        .unwrap()
+                        .lock()
+                        .unwrap()
+                        .get(&info.uuid)
+                        .unwrap()
+                        .0
+                        .to_owned(),
+                );
+                WS_HASHMAP.get().unwrap().lock().unwrap().remove(&info.uuid);
                 Ok(())
             } else {
                 Ok(())

@@ -77,18 +77,20 @@ impl GroupMessageService for MessageService {
         // 保存到数据库
         group_message::update_group_message(&message_structure).await;
 
-        // todo!("通知群内的人接收");
-        let _ = WS_HASHMAP
+        todo!("通知所有群内的人，故此处的实现逻辑错误");
+        let _ = match WS_HASHMAP
             .get()
             .unwrap()
             .lock()
             .unwrap()
-            .get(&group_id)
-            .unwrap()
-            .0
-            .send(message_structure);
-
-        false
+            .get(&group_id){
+                // 该用户在线
+                Some(v) => v.0.send(message_structure),
+                // 该用户不在线
+                None => return false,
+            };
+            
+        true
     }
 }
 
@@ -118,18 +120,19 @@ impl PrivateMessageService for MessageService {
         // 保存到数据库
         private_message::update_private_message(&message_structure).await;
 
-        //todo!("通知对方的人接收");
-        let _ = WS_HASHMAP
+        let _ = match WS_HASHMAP
             .get()
             .unwrap()
             .lock()
             .unwrap()
-            .get(&to)
-            .unwrap()
-            .0
-            .send(message_structure);
-
-        false
+            .get(&to){
+                // 该用户在线
+                Some(v) => v.0.send(message_structure),
+                // 该用户不在线
+                None => return false,
+            };
+            
+        true
     }
 }
 
