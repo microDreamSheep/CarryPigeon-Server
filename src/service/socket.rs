@@ -1,24 +1,14 @@
 use std::sync::mpsc::channel;
 
 use crate::controller::authenticator::to_user_status;
-use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
+use crate::dao::row::{GlobalMessage, MPSCMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
 use rocket::futures::{SinkExt, StreamExt};
-use rocket_ws::stream::DuplexStream;
 use serde_json::from_str;
-use tokio::time;
 
 use crate::dao::user_token::check_token;
 
 use super::messages_service::{MessageService, WS_HASHMAP};
-
-async fn ping(stream: &mut DuplexStream){
-    loop {
-        let mut interval = time::interval(time::Duration::from_secs_f32(30_f32));
-        interval.tick().await;
-        let _ = stream.send(rocket_ws::Message::Ping(vec![b'p',b'i',b'n',b'g'])).await;
-    }
-}
 
 #[rocket::get("/socket")]
 pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'static> {
@@ -45,9 +35,12 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
             let auth_result = check_token(info.uuid, info.public_key).await;
             if auth_result {
+                let _ = stream
+                    .send(rocket_ws::Message::Text("Success".to_string()))
+                    .await;
                 // MessageService
                 let service = MessageService::new();
-                let (tx, rx) = channel::<GlobalMessage>();
+                let (tx, rx) = channel::<MPSCMessage>();
                 WS_HASHMAP
                     .get()
                     .unwrap()
@@ -57,9 +50,9 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
                 socket_offline_message(info.uuid).await;
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
-                ping(&mut stream).await;
+
                 while let Some(message) = stream.next().await {
-                    service.send_message(message?.to_string()).await;
+                    service.message_service(message?).await;
                     if WS_HASHMAP
                         .get()
                         .unwrap()
@@ -71,22 +64,21 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                         .try_recv()
                         .is_ok()
                     {
-                        let _ = stream.send(rocket_ws::Message::Text(
-                            serde_json::to_string(
-                                &WS_HASHMAP
-                                    .get()
-                                    .unwrap()
-                                    .lock()
-                                    .unwrap()
-                                    .get(&info.uuid)
-                                    .unwrap()
-                                    .clone()
-                                    .1
-                                    .try_recv()
-                                    .unwrap(),
-                            )
-                            .unwrap(),
-                        ));
+                        let text = serde_json::to_string(
+                            &WS_HASHMAP
+                                .get()
+                                .unwrap()
+                                .lock()
+                                .unwrap()
+                                .get(&info.uuid)
+                                .unwrap()
+                                .1
+                                .try_recv()
+                                .unwrap()
+                                .clone(),
+                        )
+                        .unwrap();
+                        let _ = stream.send(rocket_ws::Message::Text(text)).await;
                     }
                 }
                 update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;

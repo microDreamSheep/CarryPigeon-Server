@@ -6,15 +6,16 @@ use std::{
     },
 };
 
+use rocket_ws::Message;
+
 use crate::dao::{
     group_message, private_message,
-    row::{GlobalMessage, SocketMessage},
+    row::{GlobalMessage, MPSCMessage, SocketMessage},
 };
 
 #[allow(clippy::type_complexity)]
-pub static WS_HASHMAP: OnceLock<
-    Mutex<HashMap<i64, (Sender<GlobalMessage>, Receiver<GlobalMessage>)>>,
-> = OnceLock::new();
+pub static WS_HASHMAP: OnceLock<Mutex<HashMap<i64, (Sender<MPSCMessage>, Receiver<MPSCMessage>)>>> =
+    OnceLock::new();
 
 pub async fn init_ws_hashmap() {
     let _ = WS_HASHMAP.set(Mutex::new(HashMap::new()));
@@ -29,7 +30,7 @@ pub trait GroupMessageService {
         file_path: String,
         json: String,
         timestamp: String,
-    ) -> impl std::future::Future<Output = bool> + Send;
+    ) -> impl std::future::Future<Output = ()> + Send;
 }
 
 pub trait PrivateMessageService {
@@ -41,7 +42,7 @@ pub trait PrivateMessageService {
         file_path: String,
         json: String,
         timestamp: String,
-    ) -> impl std::future::Future<Output = bool> + Send;
+    ) -> impl std::future::Future<Output = ()> + Send;
 }
 
 pub trait SystemMessageService {
@@ -59,7 +60,7 @@ impl GroupMessageService for MessageService {
         file_path: String,
         json: String,
         timestamp: String,
-    ) -> bool {
+    ) {
         // 查表找出最后一条信息的id
         let id = group_message::get_latest_message_id(group_id).await;
 
@@ -77,20 +78,13 @@ impl GroupMessageService for MessageService {
         // 保存到数据库
         group_message::update_group_message(&message_structure).await;
 
-        todo!("通知所有群内的人，故此处的实现逻辑错误");
-        let _ = match WS_HASHMAP
-            .get()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .get(&group_id){
-                // 该用户在线
-                Some(v) => v.0.send(message_structure),
-                // 该用户不在线
-                None => return false,
-            };
-            
-        true
+        // todo!("通知所有群内的人，故此处的实现逻辑错误");
+        let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&group_id) {
+            // 该用户在线
+            Some(v) => v.0.send(MPSCMessage::GlobalMessage(message_structure)),
+            // 该用户不在线
+            None => return,
+        };
     }
 }
 
@@ -102,7 +96,7 @@ impl PrivateMessageService for MessageService {
         file_path: String,
         json: String,
         timestamp: String,
-    ) -> bool {
+    ) {
         // 查表找出最后一条信息的id
         let id = private_message::get_latest_message_id(from, to).await;
 
@@ -120,19 +114,12 @@ impl PrivateMessageService for MessageService {
         // 保存到数据库
         private_message::update_private_message(&message_structure).await;
 
-        let _ = match WS_HASHMAP
-            .get()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .get(&to){
-                // 该用户在线
-                Some(v) => v.0.send(message_structure),
-                // 该用户不在线
-                None => return false,
-            };
-            
-        true
+        let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&to) {
+            // 该用户在线
+            Some(v) => v.0.send(MPSCMessage::GlobalMessage(message_structure)),
+            // 该用户不在线
+            None => return,
+        };
     }
 }
 
@@ -148,8 +135,28 @@ impl MessageService {
     }
 
     /// 发送信息
-    pub async fn send_message(&self, message: String) {
-        let json_value: SocketMessage = serde_json::from_str(message.as_str()).unwrap();
+    pub async fn message_service(&self, message: Message) {
+        // 判断消息类型
+
+        // 当message为close or empty信号时
+        if message.is_close() || message.is_empty() {
+            return;
+        }
+        // 当message为binary信号时
+        else if message.is_binary() {
+        }
+
+        // 处理消息
+        let message_value = message.to_string();
+
+        // 这里可以放心解析为SocketMessage
+        let json_value: SocketMessage = match serde_json::from_str(message_value.as_str()) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::warn!("{}", e);
+                return;
+            }
+        };
         let timestamp = chrono::Utc::now().to_string();
         // 处理群聊的信息
         if json_value.message_type == 0 {

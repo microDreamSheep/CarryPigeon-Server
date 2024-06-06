@@ -63,6 +63,7 @@ pub struct GlobalMessageWithType {
     pub message_id: i64,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MPSCMessage {
     GlobalMessage(GlobalMessage),
     GlobalMessageWithType(GlobalMessageWithType),

@@ -30,11 +30,12 @@ pub async fn get_line(
 
 #[instrument]
 pub async fn get_offline_message(uuid: i64) -> Vec<GlobalMessage> {
-    let row_temp =
-        sqlx::query_as::<_, GlobalMessage>(r#"SELECT * FROM public.private_message WHERE "to" = $1"#)
-            .bind(uuid)
-            .fetch_all(PG_POOL.get().unwrap())
-            .await;
+    let row_temp = sqlx::query_as::<_, GlobalMessage>(
+        r#"SELECT * FROM public.private_message WHERE "to" = $1"#,
+    )
+    .bind(uuid)
+    .fetch_all(PG_POOL.get().unwrap())
+    .await;
 
     return match row_temp {
         Ok(v) => v,
