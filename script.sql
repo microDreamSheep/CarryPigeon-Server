@@ -10,9 +10,9 @@ create table "group"
 (
     id     bigint,
     name   varchar,
-    owner  json,
-    admin  json,
-    member json
+    owner  bigint,
+    admin  bigint[],
+    member bigint[]
 );
 
 create table private_message

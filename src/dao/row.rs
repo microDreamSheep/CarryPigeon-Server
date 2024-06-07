@@ -69,3 +69,12 @@ pub enum MPSCMessage {
     GlobalMessageWithType(GlobalMessageWithType),
     SocketMessage(SocketMessage),
 }
+
+#[derive(sqlx::FromRow, Clone, Debug, Deserialize, Serialize)]
+pub struct Group{
+    pub id: i64,
+    pub name: String,
+    pub owner: i64,
+    pub admin: Vec<i64>,
+    pub member: Vec<i64>,
+}

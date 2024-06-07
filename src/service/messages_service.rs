@@ -9,8 +9,7 @@ use std::{
 use rocket_ws::Message;
 
 use crate::dao::{
-    group_message, private_message,
-    row::{GlobalMessage, MPSCMessage, SocketMessage},
+    group::get_all_member, group_message, private_message, row::{GlobalMessage, MPSCMessage, SocketMessage}
 };
 
 #[allow(clippy::type_complexity)]
@@ -78,13 +77,15 @@ impl GroupMessageService for MessageService {
         // 保存到数据库
         group_message::update_group_message(&message_structure).await;
 
-        // todo!("通知所有群内的人，故此处的实现逻辑错误");
-        let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&group_id) {
+        let vec_member = get_all_member(group_id).await;
+        for i in vec_member{
+            let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&i) {
             // 该用户在线
-            Some(v) => v.0.send(MPSCMessage::GlobalMessage(message_structure)),
+            Some(v) => v.0.send(MPSCMessage::GlobalMessage(message_structure.clone())),
             // 该用户不在线
             None => return,
-        };
+            };
+        }
     }
 }
 
@@ -136,8 +137,6 @@ impl MessageService {
 
     /// 发送信息
     pub async fn message_service(&self, message: Message) {
-        // 判断消息类型
-
         // 当message为close or empty信号时
         if message.is_close() || message.is_empty() {
             return;

@@ -6,7 +6,7 @@ pub static PG_POOL: OnceLock<PgPool> = OnceLock::new();
 pub static REDIS_POOL: OnceLock<Client> = OnceLock::new();
 
 #[inline]
-pub async fn make_pg_pool_connect() {
+pub async fn init_pg_pool() {
     // PostgreSQL连接
     match PoolOptions::<Postgres>::new()
         .max_connections(15)
@@ -28,6 +28,7 @@ pub async fn make_pg_pool_connect() {
     }
 }
 
+pub mod group;
 pub mod group_message;
 pub mod private_message;
 pub mod row;

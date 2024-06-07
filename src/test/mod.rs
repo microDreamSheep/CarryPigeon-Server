@@ -11,7 +11,7 @@ fn test_update_group_message() {
 }
 
 async fn impl_update_group_message() {
-    crate::dao::make_pg_pool_connect().await;
+    crate::dao::init_pg_pool().await;
     let message = crate::dao::row::GlobalMessage {
         from: 1,
         to: 1,
