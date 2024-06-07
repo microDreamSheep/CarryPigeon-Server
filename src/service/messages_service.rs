@@ -9,7 +9,9 @@ use std::{
 use rocket_ws::Message;
 
 use crate::dao::{
-    group::get_all_member, group_message, private_message, row::{GlobalMessage, MPSCMessage, SocketMessage}
+    group::get_all_member,
+    group_message, private_message,
+    row::{GlobalMessage, MPSCMessage, SocketMessage},
 };
 
 #[allow(clippy::type_complexity)]
@@ -78,12 +80,14 @@ impl GroupMessageService for MessageService {
         group_message::update_group_message(&message_structure).await;
 
         let vec_member = get_all_member(group_id).await;
-        for i in vec_member{
+        for i in vec_member {
             let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&i) {
-            // 该用户在线
-            Some(v) => v.0.send(MPSCMessage::GlobalMessage(message_structure.clone())),
-            // 该用户不在线
-            None => return,
+                // 该用户在线
+                Some(v) => {
+                    v.0.send(MPSCMessage::GlobalMessage(message_structure.clone()))
+                }
+                // 该用户不在线
+                None => return,
             };
         }
     }

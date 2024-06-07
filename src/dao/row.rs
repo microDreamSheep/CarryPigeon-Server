@@ -71,7 +71,7 @@ pub enum MPSCMessage {
 }
 
 #[derive(sqlx::FromRow, Clone, Debug, Deserialize, Serialize)]
-pub struct Group{
+pub struct Group {
     pub id: i64,
     pub name: String,
     pub owner: i64,
