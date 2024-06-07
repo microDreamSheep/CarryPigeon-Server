@@ -8,7 +8,7 @@ use super::PG_POOL;
 
 #[instrument]
 pub async fn push_token(uuid: i64, public_key: String) -> bool {
-    let rows_temp = sqlx::query("INSERT INTO public.user_token VALUES($1 , $2)")
+    let rows_temp = sqlx::query("INSERT INTO public.user_token (uuid,public_key) VALUES($1 , $2)")
         .bind(uuid)
         .bind(public_key)
         .execute(PG_POOL.get().unwrap())
@@ -40,13 +40,13 @@ async fn get_all_token(uuid: i64) -> Vec<String> {
 
 /// 匹配并验证token
 #[instrument]
-pub async fn check_token(uuid: i64, token: String) -> bool {
+pub async fn check_token<'a>(uuid: i64, token: &'a String) -> bool {
     let token_vec = get_all_token(uuid).await;
 
     // 匹配 token
     for i in token_vec {
         match decode::<RequiredClaims>(
-            &token,
+            token,
             &match DecodingKey::from_rsa_pem(i.as_bytes()) {
                 Ok(v) => v,
                 Err(e) => {

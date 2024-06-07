@@ -33,7 +33,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 None => UserToken::default(),
             };
 
-            let auth_result = check_token(info.uuid, info.public_key).await;
+            let auth_result = check_token(info.uuid, &info.public_key).await;
             if auth_result {
                 let _ = stream
                     .send(rocket_ws::Message::Text("Success".to_string()))

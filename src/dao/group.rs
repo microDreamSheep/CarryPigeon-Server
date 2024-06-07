@@ -122,3 +122,22 @@ pub async fn push_admin(group_id: i64, admin_id: i64) {
         Err(e) => tracing::error!("{}", e),
     }
 }
+
+#[instrument]
+pub async fn push_new_group<'a>(group: &'a Group) {
+    let rows_temp = sqlx::query(r#"INSERT INTO public."group" (id, name, owner, admin, member) VALUES($1 , $2, $3, $4, $5)"#)
+        .bind(group.id)
+        .bind(&group.name)
+        .bind(group.owner)
+        .bind(&group.admin)
+        .bind(&group.member)
+        .execute(PG_POOL.get().unwrap())
+        .await;
+
+    match rows_temp {
+        Ok(_) => {},
+        Err(e) => {
+            tracing::error!("{}", e);
+        }
+    };
+}
