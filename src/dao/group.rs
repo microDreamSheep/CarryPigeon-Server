@@ -135,7 +135,7 @@ pub async fn push_new_group<'a>(group: &'a Group) {
         .await;
 
     match rows_temp {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             tracing::error!("{}", e);
         }
@@ -143,7 +143,7 @@ pub async fn push_new_group<'a>(group: &'a Group) {
 }
 
 #[instrument]
-pub async fn owner_move(group_id:i64, owner:i64) {
+pub async fn owner_move(group_id: i64, owner: i64) {
     let rows_temp = sqlx::query(r#"UPDATE public."group" SET owner = $1 WHERE id = $2"#)
         .bind(group_id)
         .bind(owner)
@@ -151,7 +151,7 @@ pub async fn owner_move(group_id:i64, owner:i64) {
         .await;
 
     match rows_temp {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             tracing::error!("{}", e);
         }

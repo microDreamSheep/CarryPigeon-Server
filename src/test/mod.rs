@@ -29,14 +29,14 @@ fn test_push_new_group() {
     tokio_test::block_on(impl_push_new_group());
 }
 
-async fn impl_push_new_group(){
+async fn impl_push_new_group() {
     crate::dao::init_pg_pool().await;
-    let temp = crate::dao::row::Group{
+    let temp = crate::dao::row::Group {
         id: 0,
         name: String::from("test_group"),
-        admin:vec![0],
-        owner:0,
-        member:vec![0],
+        admin: vec![0],
+        owner: 0,
+        member: vec![0],
     };
     crate::dao::group::push_new_group(&temp).await;
 }

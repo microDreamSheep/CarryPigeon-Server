@@ -40,9 +40,8 @@ pub async fn push_group_message(message: &GlobalMessage) {
 }
 
 #[instrument]
-pub async fn delete_message(message_id: i64){
-    let _rows_temp = 
-    sqlx::query(r#"DELETE public.group_message WHERE $1"#)
+pub async fn delete_message(message_id: i64) {
+    let _rows_temp = sqlx::query(r#"DELETE public.group_message WHERE $1"#)
         .bind(message_id)
         .execute(PG_POOL.get().unwrap())
         .await;

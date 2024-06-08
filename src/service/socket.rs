@@ -53,7 +53,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
                 while let Some(message) = stream.next().await {
                     service.message_service(message?.clone()).await;
-                    
+
                     service.receive_message();
                     if WS_HASHMAP
                         .get()

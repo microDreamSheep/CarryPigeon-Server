@@ -10,7 +10,9 @@ use chrono::Utc;
 use rocket_ws::Message;
 
 use crate::dao::{
-    group::get_all_member, group_message, private_message, row::{GlobalMessage, GlobalMessageWithType, MPSCMessage, SocketMessage}
+    group::get_all_member,
+    group_message, private_message,
+    row::{GlobalMessage, GlobalMessageWithType, MPSCMessage, SocketMessage},
 };
 
 #[allow(clippy::type_complexity)]
@@ -50,8 +52,8 @@ pub trait SystemMessageService {
 }
 
 #[derive(Clone, Copy)]
-pub struct MessageService{
-    uuid: i64
+pub struct MessageService {
+    uuid: i64,
 }
 
 impl GroupMessageService for MessageService {
@@ -134,7 +136,7 @@ impl PrivateMessageService for MessageService {
                     message_id: id,
                 };
                 v.0.send(MPSCMessage::GlobalMessageWithType(result_message_structure))
-            },
+            }
             // 该用户不在线
             None => return,
         };
@@ -142,50 +144,57 @@ impl PrivateMessageService for MessageService {
 }
 
 impl SystemMessageService for MessageService {
-    async fn receive_message(&self) -> Option<GlobalMessageWithType>{
-        let binding;
-        loop {
-            if WS_HASHMAP.get().unwrap().try_lock().is_ok(){
-                binding = WS_HASHMAP.get().unwrap().try_lock().unwrap();
-                break;
+    async fn receive_message(&self) -> Option<GlobalMessageWithType> {
+        // 防止 binding 在 get_latest_message_id() 执行前就释放内存
+        // 如果 binding 被 forget 就会内存泄漏
+        // 如果 binding 不被 forget 就有可能 binding 被释放了但异步函数还为执行
+        let receive_message;
+        {
+            let binding;
+            loop {
+                if WS_HASHMAP.get().unwrap().try_lock().is_ok() {
+                    binding = WS_HASHMAP.get().unwrap().try_lock().unwrap();
+                    break;
+                }
+            }
+            let receiver = &binding.get(&self.uuid).unwrap().1;
+            if receiver.try_recv().is_ok() {
+                receive_message = receiver.try_recv().unwrap().clone();
+            } else {
+                return None;
             }
         }
-        let receiver = &binding.get(&self.uuid).unwrap().1;
-        if receiver.try_recv().is_ok(){
-            let receive_message = receiver.try_recv().unwrap();
-            match receive_message {
-                MPSCMessage::GlobalMessage(_) => {
-                    tracing::warn!("The accepted type is GlobalMessage, which lacks message_type and therefore does not know the sent object");
+        match receive_message {
+            MPSCMessage::GlobalMessage(_) => {
+                tracing::warn!("The accepted type is GlobalMessage, which lacks message_type and therefore does not know the sent object");
+                None
+            }
+            MPSCMessage::GlobalMessageWithType(v) => Some(v),
+            MPSCMessage::SocketMessage(v) => {
+                let message_id;
+                if v.message_type == 0 {
+                    message_id = group_message::get_latest_message_id(v.to).await;
+                } else if v.message_type == 1 {
+                    message_id = private_message::get_latest_message_id(v.from, v.to).await;
+                } else {
+                    tracing::warn!(
+                        "Which lacks message_type and therefore does not know the sent object"
+                    );
                     return None;
-                },
-                MPSCMessage::GlobalMessageWithType(v) => {
-                    return Some(v)
-                },
-                MPSCMessage::SocketMessage(v) => {
-                    let message_id;
-                    if v.message_type == 0{
-                        message_id = group_message::get_latest_message_id(v.to).await;
-                    } else if v.message_type == 1 {
-                        message_id = private_message::get_latest_message_id(v.from, v.to).await;
-                    } else {
-                        tracing::warn!("Which lacks message_type and therefore does not know the sent object");
-                        return None;
-                    }
-                    let result = GlobalMessageWithType{
-                        message_type: v.message_type,
-                        from: v.from,
-                        to: v.to,
-                        text: v.text,
-                        file: v.file,
-                        json: v.json,
-                        timestamp: Utc::now().to_string(),
-                        message_id,
-                    };
-                    return Some(result);
-                },
-            };
+                }
+                let result = GlobalMessageWithType {
+                    message_type: v.message_type,
+                    from: v.from,
+                    to: v.to,
+                    text: v.text,
+                    file: v.file,
+                    json: v.json,
+                    timestamp: Utc::now().to_string(),
+                    message_id,
+                };
+                Some(result)
+            }
         }
-        None
     }
 }
 
