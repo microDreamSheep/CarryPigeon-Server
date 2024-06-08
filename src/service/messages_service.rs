@@ -251,7 +251,9 @@ impl MessageService {
         }
     }
     /// 接受信息
-    pub fn receive_message(&self) {}
+    pub async fn receive_message(&self) -> Option<GlobalMessageWithType> {
+        <MessageService as SystemMessageService>::receive_message(self).await
+    }
 }
 
 impl Default for MessageService {

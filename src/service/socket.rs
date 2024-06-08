@@ -52,35 +52,18 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
 
                 while let Some(message) = stream.next().await {
-                    service.message_service(message?.clone()).await;
+                    service.message_service(message?).await;
+                    let receive_message = service.receive_message().await;
 
-                    service.receive_message();
-                    if WS_HASHMAP
-                        .get()
-                        .unwrap()
-                        .lock()
-                        .unwrap()
-                        .get(&info.uuid)
-                        .unwrap()
-                        .1
-                        .try_recv()
-                        .is_ok()
-                    {
-                        let text = serde_json::to_string(
-                            &WS_HASHMAP
-                                .get()
-                                .unwrap()
-                                .lock()
-                                .unwrap()
-                                .get(&info.uuid)
-                                .unwrap()
-                                .1
-                                .try_recv()
-                                .unwrap()
-                                .clone(),
-                        )
-                        .unwrap();
-                        let _ = stream.send(rocket_ws::Message::Text(text)).await;
+                    // 处理接收信息
+                    match receive_message {
+                        Some(v) => {
+                            let result = serde_json::to_string(&v).unwrap();
+                            let _ = stream.send(rocket_ws::Message::Text(result)).await;
+                        }
+                        None => {
+                            // Nothing to do
+                        }
                     }
                 }
                 update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;
