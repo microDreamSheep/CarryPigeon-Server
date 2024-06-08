@@ -21,7 +21,7 @@ pub async fn get_latest_message_id(group_id: i64) -> i64 {
 }
 
 #[instrument]
-pub async fn update_group_message(message: &GlobalMessage) {
+pub async fn push_group_message(message: &GlobalMessage) {
     let rows_temp =
         sqlx::query(r#"INSERT INTO public.group_message ("from", group_id, text, file_path, json, timestamp, message_id) VALUES($1, $2, $3, $4, $5, $6, $7)"#)
             .bind(message.from)
@@ -37,4 +37,13 @@ pub async fn update_group_message(message: &GlobalMessage) {
         Ok(_) => {}
         Err(e) => tracing::error!("{}", e),
     }
+}
+
+#[instrument]
+pub async fn delete_message(message_id: i64){
+    let _rows_temp = 
+    sqlx::query(r#"DELETE public.group_message WHERE $1"#)
+        .bind(message_id)
+        .execute(PG_POOL.get().unwrap())
+        .await;
 }

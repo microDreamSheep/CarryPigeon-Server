@@ -6,12 +6,11 @@ use std::{
     },
 };
 
+use chrono::Utc;
 use rocket_ws::Message;
 
 use crate::dao::{
-    group::get_all_member,
-    group_message, private_message,
-    row::{GlobalMessage, MPSCMessage, SocketMessage},
+    group::get_all_member, group_message, private_message, row::{GlobalMessage, GlobalMessageWithType, MPSCMessage, SocketMessage}
 };
 
 #[allow(clippy::type_complexity)]
@@ -47,11 +46,13 @@ pub trait PrivateMessageService {
 }
 
 pub trait SystemMessageService {
-    fn receive_message();
+    fn receive_message(&self) -> impl std::future::Future<Output = Option<GlobalMessageWithType>>;
 }
 
 #[derive(Clone, Copy)]
-pub struct MessageService;
+pub struct MessageService{
+    uuid: i64
+}
 
 impl GroupMessageService for MessageService {
     async fn send_message(
@@ -77,7 +78,7 @@ impl GroupMessageService for MessageService {
         };
 
         // 保存到数据库
-        group_message::update_group_message(&message_structure).await;
+        group_message::push_group_message(&message_structure).await;
 
         let vec_member = get_all_member(group_id).await;
         for i in vec_member {
@@ -121,7 +122,19 @@ impl PrivateMessageService for MessageService {
 
         let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&to) {
             // 该用户在线
-            Some(v) => v.0.send(MPSCMessage::GlobalMessage(message_structure)),
+            Some(v) => {
+                let result_message_structure = GlobalMessageWithType {
+                    message_type: 1,
+                    from,
+                    to,
+                    text: message_structure.text,
+                    file: message_structure.file,
+                    json: message_structure.json,
+                    timestamp: message_structure.timestamp,
+                    message_id: id,
+                };
+                v.0.send(MPSCMessage::GlobalMessageWithType(result_message_structure))
+            },
             // 该用户不在线
             None => return,
         };
@@ -129,14 +142,56 @@ impl PrivateMessageService for MessageService {
 }
 
 impl SystemMessageService for MessageService {
-    fn receive_message() {
-        todo!()
+    async fn receive_message(&self) -> Option<GlobalMessageWithType>{
+        let binding;
+        loop {
+            if WS_HASHMAP.get().unwrap().try_lock().is_ok(){
+                binding = WS_HASHMAP.get().unwrap().try_lock().unwrap();
+                break;
+            }
+        }
+        let receiver = &binding.get(&self.uuid).unwrap().1;
+        if receiver.try_recv().is_ok(){
+            let receive_message = receiver.try_recv().unwrap();
+            match receive_message {
+                MPSCMessage::GlobalMessage(_) => {
+                    tracing::warn!("The accepted type is GlobalMessage, which lacks message_type and therefore does not know the sent object");
+                    return None;
+                },
+                MPSCMessage::GlobalMessageWithType(v) => {
+                    return Some(v)
+                },
+                MPSCMessage::SocketMessage(v) => {
+                    let message_id;
+                    if v.message_type == 0{
+                        message_id = group_message::get_latest_message_id(v.to).await;
+                    } else if v.message_type == 1 {
+                        message_id = private_message::get_latest_message_id(v.from, v.to).await;
+                    } else {
+                        tracing::warn!("Which lacks message_type and therefore does not know the sent object");
+                        return None;
+                    }
+                    let result = GlobalMessageWithType{
+                        message_type: v.message_type,
+                        from: v.from,
+                        to: v.to,
+                        text: v.text,
+                        file: v.file,
+                        json: v.json,
+                        timestamp: Utc::now().to_string(),
+                        message_id,
+                    };
+                    return Some(result);
+                },
+            };
+        }
+        None
     }
 }
 
 impl MessageService {
-    pub fn new() -> Self {
-        Self
+    pub fn new(uuid: i64) -> Self {
+        Self { uuid }
     }
 
     /// 发送信息
@@ -192,6 +247,6 @@ impl MessageService {
 
 impl Default for MessageService {
     fn default() -> Self {
-        Self::new()
+        Self::new(-1)
     }
 }

@@ -141,3 +141,19 @@ pub async fn push_new_group<'a>(group: &'a Group) {
         }
     };
 }
+
+#[instrument]
+pub async fn owner_move(group_id:i64, owner:i64) {
+    let rows_temp = sqlx::query(r#"UPDATE public."group" SET owner = $1 WHERE id = $2"#)
+        .bind(group_id)
+        .bind(owner)
+        .execute(PG_POOL.get().unwrap())
+        .await;
+
+    match rows_temp {
+        Ok(_) => {},
+        Err(e) => {
+            tracing::error!("{}", e);
+        }
+    };
+}

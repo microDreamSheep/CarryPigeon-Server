@@ -39,7 +39,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     .send(rocket_ws::Message::Text("Success".to_string()))
                     .await;
                 // MessageService
-                let service = MessageService::new();
+                let service = MessageService::new(info.uuid);
                 let (tx, rx) = channel::<MPSCMessage>();
                 WS_HASHMAP
                     .get()
@@ -52,7 +52,9 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
 
                 while let Some(message) = stream.next().await {
-                    service.message_service(message?).await;
+                    service.message_service(message?.clone()).await;
+                    
+                    service.receive_message();
                     if WS_HASHMAP
                         .get()
                         .unwrap()
