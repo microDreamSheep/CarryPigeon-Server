@@ -6,15 +6,6 @@ create table "user"
     status   varchar not null
 );
 
-create table "group"
-(
-    id     bigint,
-    name   varchar,
-    owner  bigint,
-    admin  bigint[],
-    member bigint[]
-);
-
 create table private_message
 (
     "from"     bigint  not null,
@@ -30,17 +21,6 @@ create table user_token
 (
     uuid       bigint  not null,
     public_key varchar not null
-);
-
-create table group_message
-(
-    "from"     bigint  not null,
-    group_id   bigint  not null,
-    text       text,
-    file_path  text,
-    json       json,
-    timestamp  varchar not null,
-    message_id bigint
 );
 
 
