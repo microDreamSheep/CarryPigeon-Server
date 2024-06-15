@@ -16,7 +16,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
     ws.channel(move |mut stream| {
         Box::pin(async move {
             // 最终可获得UserToken
-            let info: UserToken = match stream.next().await {
+            let info: Box<UserToken> = Box::from(match stream.next().await {
                 Some(v) => match v {
                     Ok(v) => match from_str(v.to_text().unwrap()) {
                         Ok(v) => v,
@@ -31,10 +31,10 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     }
                 },
                 None => UserToken::default(),
-            };
+            });
 
-            let auth_result = check_token(info.uuid, &info.public_key).await;
-            if auth_result {
+            let auth_result = Box::new(check_token(info.uuid, &info.public_key).await);
+            if *auth_result {
                 let _ = stream
                     .send(rocket_ws::Message::Text("Success".to_string()))
                     .await;
@@ -89,8 +89,9 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
 /// 获取离线时的信息
 async fn socket_offline_message(uuid: i64) -> Vec<Vec<u8>> {
-    let messages = crate::dao::private_message::get_offline_message(uuid).await;
     let mut vec_messages_json = vec![];
+    // private_message
+    let messages = crate::dao::private_message::get_offline_message(uuid).await;
 
     for i in messages {
         let temp_chat_offline_message = GlobalMessage {

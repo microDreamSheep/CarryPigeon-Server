@@ -30,6 +30,7 @@ pub async fn init_pg_pool() {
 
 pub mod group;
 pub mod group_message;
+pub mod private;
 pub mod private_message;
 pub mod row;
 pub mod user;

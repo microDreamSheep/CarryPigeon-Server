@@ -1,5 +1,3 @@
-use chrono::Utc;
-
 use super::PG_POOL;
 use crate::dao::row::Group;
 
@@ -144,14 +142,19 @@ pub async fn push_new_group(group: &Group) -> i64 {
 
     // 创建表
     let sql = format!(
-        r#"INSERT INTO "group"."{}" ("from", text, timestamp, message_id) VALUES($1, $2, $3, $4)"#,
+        r#"create table "group".group_message_{}
+(
+    "from"     bigint,
+    text       text,
+    file_path  text,
+    json       json,
+    timestamp  varchar,
+    message_id bigint
+);
+"#,
         group_id
     );
     let rows_temp = sqlx::query(&sql)
-        .bind(-1)
-        .bind("new group")
-        .bind(Utc::now().to_string())
-        .bind(0)
         .execute(PG_POOL.get().unwrap())
         .await;
     match rows_temp {
