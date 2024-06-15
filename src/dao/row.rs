@@ -70,7 +70,7 @@ pub enum MPSCMessage {
     SocketMessage(SocketMessage),
 }
 
-#[derive(sqlx::FromRow, Clone, Debug, Deserialize, Serialize)]
+#[derive(sqlx::FromRow, FromForm, Clone, Debug, Deserialize, Serialize)]
 pub struct Group {
     pub id: i64,
     pub name: String,

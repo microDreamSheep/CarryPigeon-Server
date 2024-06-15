@@ -36,10 +36,12 @@ async fn main() -> Result<(), rocket::Error> {
     //
     // rocket
     use carrypigeon_server::controller::authenticator::post_authenticator;
+    use carrypigeon_server::controller::group::new_group;
     use carrypigeon_server::service::socket::websocket_service;
 
     let _rocket = rocket::build()
         .mount("/authenticator", routes![post_authenticator])
+        .mount("/group", routes![new_group])
         .mount("/service", routes![websocket_service])
         .launch()
         .await?;

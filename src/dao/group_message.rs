@@ -23,13 +23,9 @@ pub async fn get_latest_message_id(group_id: i64) -> Option<i64> {
 }
 
 pub async fn push_group_message(message: &GlobalMessage) {
-    let group_id = match get_latest_group_id().await {
-        Some(v) => v,
-        None => return,
-    };
     let sql = format!(
         r#"INSERT INTO "group".group_{} ("from", group_id, text, file_path, json, timestamp, message_id) VALUES($1, $2, $3, $4, $5, $6, $7)"#,
-        group_id
+        message.to
     );
     let rows_temp = sqlx::query(&sql)
         .bind(message.from)
@@ -53,19 +49,4 @@ pub async fn delete_message(group_id: i64, message_id: i64) {
         .bind(message_id)
         .execute(PG_POOL.get().unwrap())
         .await;
-}
-
-async fn get_latest_group_id() -> Option<i64> {
-    let sql = r#"SELECT MAX(id) id FROM "group"."group""#.to_string();
-    let rows_temp = sqlx::query_as::<_, Group>(&sql)
-        .fetch_one(PG_POOL.get().unwrap())
-        .await;
-    match rows_temp {
-        Ok(v) => Some(v.id),
-        Err(e) => {
-            tracing::error!("{}", e);
-            // 表示查询失败
-            None
-        }
-    }
 }
