@@ -34,6 +34,7 @@ create table "group".group_message_template
 create table private_message.private_message_template
 (
     "from"     bigint  not null,
+    "to"       bigint  not null,
     text       text,
     file_path  text,
     json       json,

@@ -124,7 +124,7 @@ impl PrivateMessageService for MessageService {
         };
 
         // 保存到数据库
-        private_message::update_private_message(&message_structure).await;
+        private_message::push_private_message(&message_structure).await;
 
         let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&to) {
             // 该用户在线

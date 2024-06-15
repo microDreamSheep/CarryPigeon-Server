@@ -7,6 +7,7 @@ pub async fn new_private_message_table(id: i64) {
         r#"create table private_message.{}
 (
     "from"     bigint  not null,
+    "to"       bigint  not null,
     text       text,
     file_path  text,
     json       json,
