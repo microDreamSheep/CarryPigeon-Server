@@ -1,7 +1,4 @@
-use super::{
-    row::{GlobalMessage, Group},
-    PG_POOL,
-};
+use super::{row::GlobalMessage, PG_POOL};
 
 pub async fn get_latest_message_id(group_id: i64) -> Option<i64> {
     let sql = format!(

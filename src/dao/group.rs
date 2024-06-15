@@ -161,7 +161,6 @@ pub async fn push_new_group(group: &Group) -> i64 {
             -1
         }
     }
-
 }
 
 pub async fn owner_move(group_id: i64, owner: i64) {
