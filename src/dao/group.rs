@@ -23,10 +23,11 @@ pub async fn get_member(group_id: i64) -> Vec<i64> {
 
 #[instrument]
 pub async fn get_admin(group_id: i64) -> Vec<i64> {
-    let rows_temp = sqlx::query_as::<_, Group>(r#"SELECT admin FROM "group"."group" WHERE id = $1"#)
-        .bind(group_id)
-        .fetch_one(PG_POOL.get().unwrap())
-        .await;
+    let rows_temp =
+        sqlx::query_as::<_, Group>(r#"SELECT admin FROM "group"."group" WHERE id = $1"#)
+            .bind(group_id)
+            .fetch_one(PG_POOL.get().unwrap())
+            .await;
 
     match rows_temp {
         Ok(v) => v.admin,
@@ -40,10 +41,11 @@ pub async fn get_admin(group_id: i64) -> Vec<i64> {
 
 #[instrument]
 pub async fn get_owner(group_id: i64) -> i64 {
-    let rows_temp = sqlx::query_as::<_, Group>(r#"SELECT owner FROM "group"."group" WHERE id = $1"#)
-        .bind(group_id)
-        .fetch_one(PG_POOL.get().unwrap())
-        .await;
+    let rows_temp =
+        sqlx::query_as::<_, Group>(r#"SELECT owner FROM "group"."group" WHERE id = $1"#)
+            .bind(group_id)
+            .fetch_one(PG_POOL.get().unwrap())
+            .await;
 
     match rows_temp {
         Ok(v) => v.owner,
@@ -98,10 +100,11 @@ pub async fn push_member(group_id: i64, member_id: i64) {
 
 #[instrument]
 pub async fn push_admin(group_id: i64, admin_id: i64) {
-    let rows_temp = sqlx::query_as::<_, Group>(r#"SELECT admin FROM "group"."group" WHERE id = $1"#)
-        .bind(group_id)
-        .fetch_one(PG_POOL.get().unwrap())
-        .await;
+    let rows_temp =
+        sqlx::query_as::<_, Group>(r#"SELECT admin FROM "group"."group" WHERE id = $1"#)
+            .bind(group_id)
+            .fetch_one(PG_POOL.get().unwrap())
+            .await;
 
     let mut member_value = match rows_temp {
         Ok(v) => v.member,

@@ -50,13 +50,15 @@ fn test_new_table() {
     //tokio_test::block_on(impl_test_new_table());
 }
 
+#[allow(dead_code)]
 async fn impl_test_new_table() {
     crate::dao::init_pg_pool().await;
     let _ = sqlx::query(
         r#"CREATE TABLE test_table(
     id bigint,
     "user" bigint
-)"#)
+)"#,
+    )
     .execute(PG_POOL.get().unwrap())
     .await;
 }
@@ -69,14 +71,16 @@ fn test_read_group_table() {
 async fn impl_test_read_group_table() {
     crate::dao::init_pg_pool().await;
     let id = "group_message_template";
-    let sql = format!(r#"INSERT INTO "group"."{}" ("from", text, timestamp, message_id) VALUES($1, $2, $3, $4)"#, id);
-    let _ = sqlx::query(
-        &sql)
-    //.bind()
-    .bind(0)
-    .bind("test")
-    .bind(Utc::now().to_string())
-    .bind(0)
-    .execute(PG_POOL.get().unwrap())
-    .await;
+    let sql = format!(
+        r#"INSERT INTO "group"."{}" ("from", text, timestamp, message_id) VALUES($1, $2, $3, $4)"#,
+        id
+    );
+    let _ = sqlx::query(&sql)
+        //.bind()
+        .bind(0)
+        .bind("test")
+        .bind(Utc::now().to_string())
+        .bind(0)
+        .execute(PG_POOL.get().unwrap())
+        .await;
 }

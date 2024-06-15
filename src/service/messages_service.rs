@@ -66,7 +66,9 @@ impl GroupMessageService for MessageService {
         timestamp: String,
     ) {
         // 查表找出最后一条信息的id
-        let id = group_message::get_latest_message_id(group_id).await;
+        let id = group_message::get_latest_message_id(group_id)
+            .await
+            .unwrap();
 
         // 构造数据
         let message_structure = GlobalMessage {
@@ -106,7 +108,9 @@ impl PrivateMessageService for MessageService {
         timestamp: String,
     ) {
         // 查表找出最后一条信息的id
-        let id = private_message::get_latest_message_id(from, to).await;
+        let id = private_message::get_latest_message_id(from, to)
+            .await
+            .unwrap();
 
         // 构造数据
         let message_structure = GlobalMessage {
@@ -173,9 +177,11 @@ impl SystemMessageService for MessageService {
             MPSCMessage::SocketMessage(v) => {
                 let message_id;
                 if v.message_type == 0 {
-                    message_id = group_message::get_latest_message_id(v.to).await;
+                    message_id = group_message::get_latest_message_id(v.to).await.unwrap();
                 } else if v.message_type == 1 {
-                    message_id = private_message::get_latest_message_id(v.from, v.to).await;
+                    message_id = private_message::get_latest_message_id(v.from, v.to)
+                        .await
+                        .unwrap();
                 } else {
                     tracing::warn!(
                         "Which lacks message_type and therefore does not know the sent object"
