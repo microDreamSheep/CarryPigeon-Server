@@ -39,7 +39,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     .send(rocket_ws::Message::Text("Success".to_string()))
                     .await;
                 // MessageService
-                let service = MessageService::new(info.uuid);
+                let service = Box::from(MessageService::new(info.uuid));
                 let (tx, rx) = channel::<MPSCMessage>();
                 WS_HASHMAP
                     .get()
@@ -53,10 +53,10 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
 
                 while let Some(message) = stream.next().await {
                     service.message_service(message?).await;
-                    let receive_message = service.receive_message().await;
+                    let receive_message = Box::new(service.receive_message().await);
 
                     // 处理接收信息
-                    match receive_message {
+                    match *receive_message {
                         Some(v) => {
                             let result = serde_json::to_string(&v).unwrap();
                             let _ = stream.send(rocket_ws::Message::Text(result)).await;

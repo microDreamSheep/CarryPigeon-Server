@@ -26,8 +26,14 @@ pub struct UserToken {
     pub public_key: String,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum SocketMessage {
+    SocketMessage(SocketMessageInfo),
+    DeleteMessage(DeleteMessage),
+}
+
 #[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
-pub struct SocketMessage {
+pub struct SocketMessageInfo {
     pub message_type: i8,
     pub from: i64,
     pub to: i64,
@@ -63,11 +69,19 @@ pub struct GlobalMessageWithType {
     pub message_id: i64,
 }
 
+#[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
+pub struct DeleteMessage {
+    pub message_type: i8,
+    pub from: i64,
+    pub to: i64,
+    pub message_id: i64,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum MPSCMessage {
     GlobalMessage(GlobalMessage),
     GlobalMessageWithType(GlobalMessageWithType),
-    SocketMessage(SocketMessage),
+    SocketMessage(SocketMessageInfo),
 }
 
 #[derive(sqlx::FromRow, FromForm, Clone, Debug, Deserialize, Serialize)]

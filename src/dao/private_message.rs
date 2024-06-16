@@ -35,7 +35,7 @@ pub async fn get_latest_message_id(from: i64, to: i64) -> Option<i64> {
             Box::new(-1)
         }
     };
-    if temp_from_to >= temp_to_from{
+    if temp_from_to >= temp_to_from {
         Some(*temp_from_to)
     } else {
         Some(*temp_to_from)
@@ -63,9 +63,14 @@ pub async fn push_private_message(message: &GlobalMessage) {
     }
 }
 
-pub async fn delete_private_message(id: i64, message_id: i64) {
-    let sql = format!(r#"DELETE private_message.private_message_{} WHERE message_id = $1"#, id);
+pub async fn delete_private_message(id: i64, from: i64, to: i64, message_id: i64) {
+    let sql = format!(
+        r#"DELETE private_message.private_message_{} WHERE "from" = $1 "to" = $2 message_id = $3"#,
+        id
+    );
     let _rows_temp = sqlx::query(&sql)
+        .bind(from)
+        .bind(to)
         .bind(message_id)
         .execute(PG_POOL.get().unwrap())
         .await;

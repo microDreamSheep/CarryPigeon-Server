@@ -1,3 +1,4 @@
+use std::future::Future;
 use std::{
     collections::HashMap,
     sync::{
@@ -9,10 +10,13 @@ use std::{
 use chrono::Utc;
 use rocket_ws::Message;
 
+use crate::dao::group_message::delete_group_message;
+use crate::dao::private_message::delete_private_message;
+use crate::dao::row::SocketMessage;
 use crate::dao::{
     group::get_all_member,
     group_message, private_message,
-    row::{GlobalMessage, GlobalMessageWithType, MPSCMessage, SocketMessage},
+    row::{GlobalMessage, GlobalMessageWithType, MPSCMessage},
 };
 
 #[allow(clippy::type_complexity)]
@@ -32,7 +36,8 @@ pub trait GroupMessageService {
         file_path: String,
         json: String,
         timestamp: String,
-    ) -> impl std::future::Future<Output = ()> + Send;
+    ) -> impl Future<Output = ()> + Send;
+    fn delete_message(group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
 
 pub trait PrivateMessageService {
@@ -44,11 +49,12 @@ pub trait PrivateMessageService {
         file_path: String,
         json: String,
         timestamp: String,
-    ) -> impl std::future::Future<Output = ()> + Send;
+    ) -> impl Future<Output = ()> + Send;
+    fn delete_message(from: i64, to: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
 
 pub trait SystemMessageService {
-    fn receive_message(&self) -> impl std::future::Future<Output = Option<GlobalMessageWithType>>;
+    fn receive_message(&self) -> impl Future<Output = Option<GlobalMessageWithType>>;
 }
 
 #[derive(Clone, Copy)]
@@ -95,6 +101,9 @@ impl GroupMessageService for MessageService {
                 None => return,
             };
         }
+    }
+    async fn delete_message(group_id: i64, message_id: i64) {
+        delete_group_message(group_id, message_id).await;
     }
 }
 
@@ -145,6 +154,10 @@ impl PrivateMessageService for MessageService {
             None => return,
         };
     }
+    async fn delete_message(from: i64, to: i64, message_id: i64) {
+        delete_private_message(from, from, to, message_id).await;
+        delete_private_message(to, from, to, message_id).await;
+    }
 }
 
 impl SystemMessageService for MessageService {
@@ -168,6 +181,9 @@ impl SystemMessageService for MessageService {
                 return None;
             }
         }
+        // 完成 binding 的处理
+
+        // 开始处理 MPSC 消息队列
         match receive_message {
             MPSCMessage::GlobalMessage(_) => {
                 tracing::warn!("The accepted type is GlobalMessage, which lacks message_type and therefore does not know the sent object");
@@ -209,7 +225,7 @@ impl MessageService {
         Self { uuid }
     }
 
-    /// 发送信息
+    /// 信息服务
     pub async fn message_service(&self, message: Message) {
         // 当message为close or empty信号时
         if message.is_close() || message.is_empty() {
@@ -230,30 +246,40 @@ impl MessageService {
                 return;
             }
         };
-        let timestamp = chrono::Utc::now().to_string();
-        // 处理群聊的信息
-        if json_value.message_type == 0 {
-            let _result = <MessageService as GroupMessageService>::send_message(
-                json_value.to,
-                json_value.from,
-                json_value.text,
-                json_value.file,
-                json_value.json,
-                timestamp,
-            )
-            .await;
-        }
-        // 处理私聊信息
-        else if json_value.message_type == 1 {
-            let _result = <MessageService as PrivateMessageService>::send_message(
-                json_value.to,
-                json_value.from,
-                json_value.text,
-                json_value.file,
-                json_value.json,
-                timestamp,
-            )
-            .await;
+        let timestamp = Utc::now().to_string();
+        match json_value {
+            // 处理信息的发送
+            SocketMessage::SocketMessage(v) => {
+                // 处理群聊的信息
+                if v.message_type == 0 {
+                    <MessageService as GroupMessageService>::send_message(
+                        v.to, v.from, v.text, v.file, v.json, timestamp,
+                    )
+                    .await;
+                }
+                // 处理私聊信息
+                else if v.message_type == 1 {
+                    <MessageService as PrivateMessageService>::send_message(
+                        v.to, v.from, v.text, v.file, v.json, timestamp,
+                    )
+                    .await;
+                }
+            }
+            // 处理信息的删除
+            SocketMessage::DeleteMessage(v) => {
+                // 处理群聊的信息
+                if v.message_type == 0 {
+                    <MessageService as GroupMessageService>::delete_message(v.to, v.message_id)
+                        .await;
+                } else if v.message_type == 1 {
+                    <MessageService as PrivateMessageService>::delete_message(
+                        v.from,
+                        v.to,
+                        v.message_id,
+                    )
+                    .await;
+                }
+            }
         }
     }
     /// 接受信息

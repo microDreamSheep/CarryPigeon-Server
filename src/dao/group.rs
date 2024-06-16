@@ -154,9 +154,7 @@ pub async fn push_new_group(group: &Group) -> i64 {
 "#,
         group_id
     );
-    let rows_temp = sqlx::query(&sql)
-        .execute(PG_POOL.get().unwrap())
-        .await;
+    let rows_temp = sqlx::query(&sql).execute(PG_POOL.get().unwrap()).await;
     match rows_temp {
         Ok(_) => group_id,
         Err(e) => {
