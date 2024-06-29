@@ -6,7 +6,7 @@ use serde_json::from_str;
 
 use crate::dao::user_token::check_token;
 
-use super::messages_service::{MessageService, WS_HASHMAP};
+use super::messages_service::{MessageService, SystemMessageService, WS_HASHMAP};
 
 #[rocket::get("/socket")]
 pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'static> {
@@ -14,7 +14,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
     ws.channel(move |mut stream| {
         Box::pin(async move {
             // 最终可获得UserToken
-            let info: Box<UserToken> = Box::from(match stream.next().await {
+            let info: Box<UserToken> = Box::new(match stream.next().await {
                 Some(v) => match v {
                     Ok(v) => match from_str(v.to_text().unwrap()) {
                         Ok(v) => v,
@@ -38,6 +38,8 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     .await;
                 // MessageService
                 let service = Box::new(MessageService::new(info.uuid));
+                // 接受离线信息
+                service.receive_offline_message().await;
 
                 socket_offline_message(info.uuid).await;
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;

@@ -51,7 +51,7 @@ pub async fn encrypt(
 
 pub async fn authenticator_encrypt(sub: i64, iat: i64, exp: i64) -> String {
     let (private_key, public_key, mut _rng) = generate_key().await;
-    let user_claims = RequiredClaims { sub, iat, exp };
+    let user_claims = Box::new(RequiredClaims { sub, iat, exp });
     match encode(
         &Header::new(Algorithm::RS256),
         &user_claims,

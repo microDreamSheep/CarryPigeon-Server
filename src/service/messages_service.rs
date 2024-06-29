@@ -57,6 +57,7 @@ pub trait PrivateMessageService {
 
 pub trait SystemMessageService {
     fn receive_message(&self) -> impl Future<Output = Option<GlobalMessageWithType>>;
+    fn receive_offline_message(&self) -> impl Future<Output = Option<Vec<GlobalMessageWithType>>>;
 }
 
 pub struct MessageService {
@@ -97,6 +98,7 @@ impl GroupMessageService for MessageService {
                     &message_structure.from,
                     &message_structure.text,
                     &message_structure.message_id,
+                    0,
                 ),
             )
         }
@@ -152,6 +154,7 @@ impl PrivateMessageService for MessageService {
                     &message_structure.from,
                     &message_structure.text,
                     &message_structure.message_id,
+                    1,
                 ),
             )
         }
@@ -231,6 +234,50 @@ impl SystemMessageService for MessageService {
                     message_id,
                 };
                 Some(result)
+            }
+        }
+    }
+    async fn receive_offline_message(&self) -> Option<Vec<GlobalMessageWithType>> {
+        let mut result: Vec<GlobalMessageWithType> = vec![];
+        let mut from: i64;
+        let mut text: String;
+        let mut message_id: i64;
+        let mut message_type: i8;
+        unsafe {
+            loop {
+                match REDIS_POOL
+                    .get_mut()
+                    .unwrap()
+                    .get::<i64, (i64, String, i64, i8)>(self.uuid)
+                    .await
+                {
+                    Ok(_) => {
+                        (from, text, message_id, message_type) = REDIS_POOL
+                            .get_mut()
+                            .unwrap()
+                            .get_del(self.uuid)
+                            .await
+                            .unwrap();
+                        let temp = Box::new(GlobalMessageWithType {
+                            message_type,
+                            from,
+                            to: self.uuid,
+                            text,
+                            file: "".to_string(),
+                            json: "".to_string(),
+                            timestamp: "".to_string(),
+                            message_id,
+                        });
+                        result.push(*temp);
+                    }
+                    Err(_) => {
+                        return if result.is_empty() {
+                            None
+                        } else {
+                            Some(result)
+                        }
+                    }
+                }
             }
         }
     }

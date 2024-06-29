@@ -16,8 +16,8 @@ pub async fn new_private_message_table(id: i64) {
 );"#,
         id
     );
-    let rows_temp = sqlx::query(&sql).execute(PG_POOL.get().unwrap()).await;
-    match rows_temp {
+    let rows_temp = Box::new(sqlx::query(&sql).execute(PG_POOL.get().unwrap()).await);
+    match *rows_temp {
         Ok(_) => (),
         Err(e) => {
             tracing::error!("{}", e);
@@ -29,8 +29,8 @@ pub async fn new_private_message_table(id: i64) {
 /// 注意：如果不是销号清理数据的地方不能使用
 pub async fn drop_private_message_table(id: i64) {
     let sql = format!(r#"drop table private_message.{}"#, id);
-    let rows_temp = sqlx::query(&sql).execute(PG_POOL.get().unwrap()).await;
-    match rows_temp {
+    let rows_temp = Box::new(sqlx::query(&sql).execute(PG_POOL.get().unwrap()).await);
+    match *rows_temp {
         Ok(_) => (),
         Err(e) => {
             tracing::error!("{}", e);

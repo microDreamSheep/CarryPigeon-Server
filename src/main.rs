@@ -9,17 +9,20 @@ use tracing_subscriber::{
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
     // 处理tracing输出和调用
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter =
+        Box::new(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")));
     // 输出到控制台中
-    //let formatting_layer = fmt::layer().pretty().with_writer(std::io::stderr);
-    let formatting_layer = fmt::layer();
+    //let formatting_layer = Box::(fmt::layer().pretty().with_writer(std::io::stderr));
+    let formatting_layer = Box::new(fmt::layer());
 
     // 输出到文件中
-    let file_appender = rolling::never("logs", "log.txt");
+    let file_appender = Box::new(rolling::never("logs", "log.txt"));
     let (non_blocking_appender, _guard) = non_blocking(file_appender);
-    let file_layer = fmt::layer()
-        .with_ansi(false)
-        .with_writer(non_blocking_appender);
+    let file_layer = Box::new(
+        fmt::layer()
+            .with_ansi(false)
+            .with_writer(non_blocking_appender),
+    );
 
     // 注册
     Registry::default()
