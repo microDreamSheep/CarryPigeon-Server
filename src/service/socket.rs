@@ -1,7 +1,5 @@
-use std::sync::mpsc::channel;
-
 use crate::controller::authenticator::to_user_status;
-use crate::dao::row::{GlobalMessage, MPSCMessage, UserStatus, UserToken};
+use crate::dao::row::{GlobalMessage, UserStatus, UserToken};
 use crate::dao::user::update_status;
 use rocket::futures::{SinkExt, StreamExt};
 use serde_json::from_str;
@@ -39,14 +37,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     .send(rocket_ws::Message::Text("Success".to_string()))
                     .await;
                 // MessageService
-                let service = Box::from(MessageService::new(info.uuid));
-                let (tx, rx) = channel::<MPSCMessage>();
-                WS_HASHMAP
-                    .get()
-                    .unwrap()
-                    .lock()
-                    .unwrap()
-                    .insert(info.uuid, (tx, rx));
+                let service = Box::new(MessageService::new(info.uuid));
 
                 socket_offline_message(info.uuid).await;
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
@@ -75,7 +66,6 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                         .unwrap()
                         .get(&info.uuid)
                         .unwrap()
-                        .0
                         .to_owned(),
                 );
                 WS_HASHMAP.get().unwrap().lock().unwrap().remove(&info.uuid);

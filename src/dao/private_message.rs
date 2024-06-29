@@ -1,6 +1,6 @@
 use super::{row::GlobalMessage, PG_POOL};
 
-pub async fn get_offline_message(uuid: i64) -> Vec<GlobalMessage> {
+pub async fn get_offline_message(_uuid: i64) -> Vec<GlobalMessage> {
     vec![]
 }
 

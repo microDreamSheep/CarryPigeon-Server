@@ -92,3 +92,10 @@ pub struct Group {
     pub admin: Vec<i64>,
     pub member: Vec<i64>,
 }
+
+#[derive(sqlx::FromRow, FromForm, Clone, Debug, Deserialize, Serialize)]
+pub struct CreateGroupRequest {
+    pub owner_id: i64,
+    pub token: String,
+    pub member: Vec<i64>,
+}

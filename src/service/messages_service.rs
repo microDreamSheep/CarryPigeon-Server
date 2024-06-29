@@ -1,4 +1,5 @@
 use std::future::Future;
+use std::sync::mpsc::channel;
 use std::{
     collections::HashMap,
     sync::{
@@ -8,6 +9,7 @@ use std::{
 };
 
 use chrono::Utc;
+use redis::AsyncCommands;
 use rocket_ws::Message;
 
 use crate::dao::group_message::delete_group_message;
@@ -17,11 +19,11 @@ use crate::dao::{
     group::get_all_member,
     group_message, private_message,
     row::{GlobalMessage, GlobalMessageWithType, MPSCMessage},
+    REDIS_POOL,
 };
 
 #[allow(clippy::type_complexity)]
-pub static WS_HASHMAP: OnceLock<Mutex<HashMap<i64, (Sender<MPSCMessage>, Receiver<MPSCMessage>)>>> =
-    OnceLock::new();
+pub static WS_HASHMAP: OnceLock<Mutex<HashMap<i64, Sender<MPSCMessage>>>> = OnceLock::new();
 
 pub async fn init_ws_hashmap() {
     let _ = WS_HASHMAP.set(Mutex::new(HashMap::new()));
@@ -57,9 +59,9 @@ pub trait SystemMessageService {
     fn receive_message(&self) -> impl Future<Output = Option<GlobalMessageWithType>>;
 }
 
-#[derive(Clone, Copy)]
 pub struct MessageService {
     uuid: i64,
+    receiver: Mutex<Receiver<MPSCMessage>>,
 }
 
 impl GroupMessageService for MessageService {
@@ -88,15 +90,25 @@ impl GroupMessageService for MessageService {
         };
 
         // 保存到数据库
+        let _: () = unsafe {
+            REDIS_POOL.get_mut().unwrap().set(
+                message_structure.to,
+                (
+                    &message_structure.from,
+                    &message_structure.text,
+                    &message_structure.message_id,
+                ),
+            )
+        }
+        .await
+        .unwrap();
         group_message::push_group_message(&message_structure).await;
 
         let vec_member = get_all_member(group_id).await;
         for i in vec_member {
             let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&i) {
                 // 该用户在线
-                Some(v) => {
-                    v.0.send(MPSCMessage::GlobalMessage(message_structure.clone()))
-                }
+                Some(v) => v.send(MPSCMessage::GlobalMessage(message_structure.clone())),
                 // 该用户不在线
                 None => return,
             };
@@ -133,6 +145,18 @@ impl PrivateMessageService for MessageService {
         };
 
         // 保存到数据库
+        let _: () = unsafe {
+            REDIS_POOL.get_mut().unwrap().set(
+                message_structure.to,
+                (
+                    &message_structure.from,
+                    &message_structure.text,
+                    &message_structure.message_id,
+                ),
+            )
+        }
+        .await
+        .unwrap();
         private_message::push_private_message(&message_structure).await;
 
         let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&to) {
@@ -148,7 +172,7 @@ impl PrivateMessageService for MessageService {
                     timestamp: message_structure.timestamp,
                     message_id: id,
                 };
-                v.0.send(MPSCMessage::GlobalMessageWithType(result_message_structure))
+                v.send(MPSCMessage::GlobalMessageWithType(result_message_structure))
             }
             // 该用户不在线
             None => return,
@@ -162,29 +186,21 @@ impl PrivateMessageService for MessageService {
 
 impl SystemMessageService for MessageService {
     async fn receive_message(&self) -> Option<GlobalMessageWithType> {
-        // 防止 binding 在 get_latest_message_id() 执行前就释放内存
-        // 如果 binding 被 forget 就会内存泄漏
-        // 如果 binding 不被 forget 就有可能 binding 被释放了但异步函数还为执行
-        let receive_message;
-        {
-            let binding;
-            loop {
-                if WS_HASHMAP.get().unwrap().try_lock().is_ok() {
-                    binding = WS_HASHMAP.get().unwrap().try_lock().unwrap();
-                    break;
-                }
-            }
-            let receiver = &binding.get(&self.uuid).unwrap().1;
-            if receiver.try_recv().is_ok() {
-                receive_message = receiver.try_recv().unwrap().clone();
-            } else {
-                return None;
-            }
-        }
-        // 完成 binding 的处理
+        let receive_message = if self.receiver.try_lock().unwrap().try_recv().is_ok() {
+            Box::new(
+                self.receiver
+                    .try_lock()
+                    .unwrap()
+                    .try_recv()
+                    .unwrap()
+                    .clone(),
+            )
+        } else {
+            return None;
+        };
 
         // 开始处理 MPSC 消息队列
-        match receive_message {
+        match *receive_message {
             MPSCMessage::GlobalMessage(_) => {
                 tracing::warn!("The accepted type is GlobalMessage, which lacks message_type and therefore does not know the sent object");
                 None
@@ -222,7 +238,12 @@ impl SystemMessageService for MessageService {
 
 impl MessageService {
     pub fn new(uuid: i64) -> Self {
-        Self { uuid }
+        let (tx, rx) = channel::<MPSCMessage>();
+        WS_HASHMAP.get().unwrap().lock().unwrap().insert(uuid, tx);
+        Self {
+            uuid,
+            receiver: Mutex::new(rx),
+        }
     }
 
     /// 信息服务
