@@ -32,6 +32,7 @@ pub async fn init_ws_hashmap() {
 pub trait GroupMessageService {
     /// 向群内发送信息
     fn send_message(
+        &self,
         group_id: i64,
         from: i64,
         text: String,
@@ -39,12 +40,13 @@ pub trait GroupMessageService {
         json: String,
         timestamp: String,
     ) -> impl Future<Output = ()> + Send;
-    fn delete_message(group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
+    fn delete_message(&self,group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
 
 pub trait PrivateMessageService {
     /// 向个人发送信息
     fn send_message(
+        &self,
         to: i64,
         from: i64,
         text: String,
@@ -52,7 +54,7 @@ pub trait PrivateMessageService {
         json: String,
         timestamp: String,
     ) -> impl Future<Output = ()> + Send;
-    fn delete_message(from: i64, to: i64, message_id: i64) -> impl Future<Output = ()> + Send;
+    fn delete_message(&self,from: i64, to: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
 
 pub trait SystemMessageService {
@@ -67,6 +69,7 @@ pub struct MessageService {
 
 impl GroupMessageService for MessageService {
     async fn send_message(
+        &self,
         group_id: i64,
         from: i64,
         text: String,
@@ -80,7 +83,7 @@ impl GroupMessageService for MessageService {
             .unwrap();
 
         // 构造数据
-        let message_structure = GlobalMessage {
+        let message_structure = Box::new(GlobalMessage {
             from,
             to: group_id,
             text,
@@ -88,9 +91,12 @@ impl GroupMessageService for MessageService {
             json,
             timestamp,
             message_id: id,
-        };
+        });
 
         // 保存到数据库
+        todo!("redis数据储存结构应该为 set
+        set 储存信息json集合
+        ");
         let _: () = unsafe {
             REDIS_POOL.get_mut().unwrap().set(
                 message_structure.to,
@@ -110,19 +116,22 @@ impl GroupMessageService for MessageService {
         for i in vec_member {
             let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&i) {
                 // 该用户在线
-                Some(v) => v.send(MPSCMessage::GlobalMessage(message_structure.clone())),
+                Some(v) => {
+                    v.send(MPSCMessage::GlobalMessage(*message_structure.clone()))
+                },
                 // 该用户不在线
                 None => return,
             };
         }
     }
-    async fn delete_message(group_id: i64, message_id: i64) {
+    async fn delete_message(&self,group_id: i64, message_id: i64) {
         delete_group_message(group_id, message_id).await;
     }
 }
 
 impl PrivateMessageService for MessageService {
     async fn send_message(
+        &self,
         to: i64,
         from: i64,
         text: String,
@@ -181,7 +190,7 @@ impl PrivateMessageService for MessageService {
             None => return,
         };
     }
-    async fn delete_message(from: i64, to: i64, message_id: i64) {
+    async fn delete_message(&self,from: i64, to: i64, message_id: i64) {
         delete_private_message(from, from, to, message_id).await;
         delete_private_message(to, from, to, message_id).await;
     }
@@ -320,15 +329,21 @@ impl MessageService {
             SocketMessage::SocketMessage(v) => {
                 // 处理群聊的信息
                 if v.message_type == 0 {
+                    unsafe{
+                        let _:() = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
+                    };
                     <MessageService as GroupMessageService>::send_message(
-                        v.to, v.from, v.text, v.file, v.json, timestamp,
+                        self,v.to, v.from, v.text, v.file, v.json, timestamp,
                     )
                     .await;
                 }
                 // 处理私聊信息
                 else if v.message_type == 1 {
+                    unsafe{
+                        let _:() = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
+                    };
                     <MessageService as PrivateMessageService>::send_message(
-                        v.to, v.from, v.text, v.file, v.json, timestamp,
+                        self,v.to, v.from, v.text, v.file, v.json, timestamp,
                     )
                     .await;
                 }
@@ -337,10 +352,11 @@ impl MessageService {
             SocketMessage::DeleteMessage(v) => {
                 // 处理群聊的信息
                 if v.message_type == 0 {
-                    <MessageService as GroupMessageService>::delete_message(v.to, v.message_id)
+                    <MessageService as GroupMessageService>::delete_message(self,v.to, v.message_id)
                         .await;
                 } else if v.message_type == 1 {
                     <MessageService as PrivateMessageService>::delete_message(
+                        self,
                         v.from,
                         v.to,
                         v.message_id,

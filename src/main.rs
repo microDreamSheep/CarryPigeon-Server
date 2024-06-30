@@ -10,6 +10,8 @@ use tracing_subscriber::{
 async fn main() -> Result<(), rocket::Error> {
     // 处理tracing输出和调用
     let env_filter =
+    // 此处过滤了info以下的信息
+    // 正式版时需要替换为warn
         Box::new(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")));
     // 输出到控制台中
     //let formatting_layer = Box::(fmt::layer().pretty().with_writer(std::io::stderr));
