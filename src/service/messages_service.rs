@@ -8,10 +8,6 @@ use std::{
     },
 };
 
-use chrono::Utc;
-use redis::AsyncCommands;
-use rocket_ws::Message;
-
 use crate::dao::group_message::delete_group_message;
 use crate::dao::private_message::delete_private_message;
 use crate::dao::row::SocketMessage;
@@ -21,6 +17,9 @@ use crate::dao::{
     row::{GlobalMessage, GlobalMessageWithType, MPSCMessage},
     REDIS_POOL,
 };
+use chrono::Utc;
+use redis::AsyncCommands;
+use rocket_ws::Message;
 
 #[allow(clippy::type_complexity)]
 pub static WS_HASHMAP: OnceLock<Mutex<HashMap<i64, Sender<MPSCMessage>>>> = OnceLock::new();
@@ -40,7 +39,7 @@ pub trait GroupMessageService {
         json: String,
         timestamp: String,
     ) -> impl Future<Output = ()> + Send;
-    fn delete_message(&self,group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
+    fn delete_message(&self, group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
 
 pub trait PrivateMessageService {
@@ -54,7 +53,12 @@ pub trait PrivateMessageService {
         json: String,
         timestamp: String,
     ) -> impl Future<Output = ()> + Send;
-    fn delete_message(&self,from: i64, to: i64, message_id: i64) -> impl Future<Output = ()> + Send;
+    fn delete_message(
+        &self,
+        from: i64,
+        to: i64,
+        message_id: i64,
+    ) -> impl Future<Output = ()> + Send;
 }
 
 pub trait SystemMessageService {
@@ -94,37 +98,41 @@ impl GroupMessageService for MessageService {
         });
 
         // 保存到数据库
-        todo!("redis数据储存结构应该为 set
-        set 储存信息json集合
-        ");
         let _: () = unsafe {
-            REDIS_POOL.get_mut().unwrap().set(
-                message_structure.to,
-                (
-                    &message_structure.from,
-                    &message_structure.text,
-                    &message_structure.message_id,
-                    0,
-                ),
-            )
-        }
-        .await
-        .unwrap();
+            let mut temp: String = REDIS_POOL
+                .get_mut()
+                .unwrap()
+                .get_del(message_structure.to)
+                .await
+                .unwrap();
+            let new_message = Box::new(serde_json::to_string(&GlobalMessageWithType {
+                message_type: 0,
+                from,
+                to: group_id,
+                text: message_structure.text.clone(),
+                file: message_structure.file.clone(),
+                json: message_structure.json.clone(),
+                timestamp: message_structure.timestamp.clone(),
+                message_id: id,
+            }).unwrap());
+            temp.push(' ');
+            temp.push_str((*new_message).as_str());
+
+            let _:() = REDIS_POOL.get_mut().unwrap().set(message_structure.to,temp).await.unwrap();
+        };
         group_message::push_group_message(&message_structure).await;
 
         let vec_member = get_all_member(group_id).await;
         for i in vec_member {
             let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&i) {
                 // 该用户在线
-                Some(v) => {
-                    v.send(MPSCMessage::GlobalMessage(*message_structure.clone()))
-                },
+                Some(v) => v.send(MPSCMessage::GlobalMessage(*message_structure.clone())),
                 // 该用户不在线
                 None => return,
             };
         }
     }
-    async fn delete_message(&self,group_id: i64, message_id: i64) {
+    async fn delete_message(&self, group_id: i64, message_id: i64) {
         delete_group_message(group_id, message_id).await;
     }
 }
@@ -157,18 +165,27 @@ impl PrivateMessageService for MessageService {
 
         // 保存到数据库
         let _: () = unsafe {
-            REDIS_POOL.get_mut().unwrap().set(
-                message_structure.to,
-                (
-                    &message_structure.from,
-                    &message_structure.text,
-                    &message_structure.message_id,
-                    1,
-                ),
-            )
-        }
-        .await
-        .unwrap();
+            let mut temp: String = REDIS_POOL
+                .get_mut()
+                .unwrap()
+                .get_del(message_structure.to)
+                .await
+                .unwrap();
+            let new_message = Box::new(serde_json::to_string(&GlobalMessageWithType {
+                message_type: 1,
+                from,
+                to,
+                text: message_structure.text.clone(),
+                file: message_structure.file.clone(),
+                json: message_structure.json.clone(),
+                timestamp: message_structure.timestamp.clone(),
+                message_id: id,
+            }).unwrap());
+            temp.push(' ');
+            temp.push_str((*new_message).as_str());
+
+            let _:() = REDIS_POOL.get_mut().unwrap().set(message_structure.to,temp).await.unwrap();
+        };
         private_message::push_private_message(&message_structure).await;
 
         let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&to) {
@@ -190,7 +207,7 @@ impl PrivateMessageService for MessageService {
             None => return,
         };
     }
-    async fn delete_message(&self,from: i64, to: i64, message_id: i64) {
+    async fn delete_message(&self, from: i64, to: i64, message_id: i64) {
         delete_private_message(from, from, to, message_id).await;
         delete_private_message(to, from, to, message_id).await;
     }
@@ -310,6 +327,7 @@ impl MessageService {
         }
         // 当message为binary信号时
         else if message.is_binary() {
+            // 先接收文件，再使用ClamAV对其进行扫描
         }
 
         // 处理消息
@@ -329,21 +347,21 @@ impl MessageService {
             SocketMessage::SocketMessage(v) => {
                 // 处理群聊的信息
                 if v.message_type == 0 {
-                    unsafe{
-                        let _:() = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
+                    unsafe {
+                        let _: () = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
                     };
                     <MessageService as GroupMessageService>::send_message(
-                        self,v.to, v.from, v.text, v.file, v.json, timestamp,
+                        self, v.to, v.from, v.text, v.file, v.json, timestamp,
                     )
                     .await;
                 }
                 // 处理私聊信息
                 else if v.message_type == 1 {
-                    unsafe{
-                        let _:() = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
+                    unsafe {
+                        let _: () = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
                     };
                     <MessageService as PrivateMessageService>::send_message(
-                        self,v.to, v.from, v.text, v.file, v.json, timestamp,
+                        self, v.to, v.from, v.text, v.file, v.json, timestamp,
                     )
                     .await;
                 }
@@ -352,8 +370,12 @@ impl MessageService {
             SocketMessage::DeleteMessage(v) => {
                 // 处理群聊的信息
                 if v.message_type == 0 {
-                    <MessageService as GroupMessageService>::delete_message(self,v.to, v.message_id)
-                        .await;
+                    <MessageService as GroupMessageService>::delete_message(
+                        self,
+                        v.to,
+                        v.message_id,
+                    )
+                    .await;
                 } else if v.message_type == 1 {
                     <MessageService as PrivateMessageService>::delete_message(
                         self,
