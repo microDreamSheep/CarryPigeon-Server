@@ -1,7 +1,8 @@
 FROM alpine
-COPY target/release/carrypigeon-server /carrypigeon/
-WORKDIR /carrypigeon/
-EXPOSE 80
+RUN mkdir /home/carrypigeon
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
     && apk add --no-cache redis
-CMD ["./carrypigeon-server"]
+WORKDIR /home/carrypigeon
+COPY target/x86_64-unknown-linux-musl/release/carrypigeon-server /home/carrypigeon
+EXPOSE 80
+ENTRYPOINT ./carrypigeon-server
