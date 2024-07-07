@@ -105,20 +105,28 @@ impl GroupMessageService for MessageService {
                 .get_del(message_structure.to)
                 .await
                 .unwrap();
-            let new_message = Box::new(serde_json::to_string(&GlobalMessageWithType {
-                message_type: 0,
-                from,
-                to: group_id,
-                text: message_structure.text.clone(),
-                file: message_structure.file.clone(),
-                json: message_structure.json.clone(),
-                timestamp: message_structure.timestamp.clone(),
-                message_id: id,
-            }).unwrap());
+            let new_message = Box::new(
+                serde_json::to_string(&GlobalMessageWithType {
+                    message_type: 0,
+                    from,
+                    to: group_id,
+                    text: message_structure.text.clone(),
+                    file: message_structure.file.clone(),
+                    json: message_structure.json.clone(),
+                    timestamp: message_structure.timestamp.clone(),
+                    message_id: id,
+                })
+                .unwrap(),
+            );
             temp.push(' ');
             temp.push_str((*new_message).as_str());
 
-            let _:() = REDIS_POOL.get_mut().unwrap().set(message_structure.to,temp).await.unwrap();
+            let _: () = REDIS_POOL
+                .get_mut()
+                .unwrap()
+                .set(message_structure.to, temp)
+                .await
+                .unwrap();
         };
         group_message::push_group_message(&message_structure).await;
 
@@ -171,20 +179,28 @@ impl PrivateMessageService for MessageService {
                 .get_del(message_structure.to)
                 .await
                 .unwrap();
-            let new_message = Box::new(serde_json::to_string(&GlobalMessageWithType {
-                message_type: 1,
-                from,
-                to,
-                text: message_structure.text.clone(),
-                file: message_structure.file.clone(),
-                json: message_structure.json.clone(),
-                timestamp: message_structure.timestamp.clone(),
-                message_id: id,
-            }).unwrap());
+            let new_message = Box::new(
+                serde_json::to_string(&GlobalMessageWithType {
+                    message_type: 1,
+                    from,
+                    to,
+                    text: message_structure.text.clone(),
+                    file: message_structure.file.clone(),
+                    json: message_structure.json.clone(),
+                    timestamp: message_structure.timestamp.clone(),
+                    message_id: id,
+                })
+                .unwrap(),
+            );
             temp.push(' ');
             temp.push_str((*new_message).as_str());
 
-            let _:() = REDIS_POOL.get_mut().unwrap().set(message_structure.to,temp).await.unwrap();
+            let _: () = REDIS_POOL
+                .get_mut()
+                .unwrap()
+                .set(message_structure.to, temp)
+                .await
+                .unwrap();
         };
         private_message::push_private_message(&message_structure).await;
 
