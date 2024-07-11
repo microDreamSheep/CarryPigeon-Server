@@ -45,7 +45,15 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
 
                 while let Some(message) = stream.next().await {
-                    service.message_service(message?).await;
+                    // 获取message
+                    let message = message.unwrap();
+                    // service
+                    if service.handle_ping_message(message.clone()).await {
+                        let _ = stream
+                            .send(rocket_ws::Message::Pong(String::from("pong").into_bytes()))
+                            .await;
+                    }
+                    service.message_service(message.clone()).await;
                     let receive_message = Box::new(service.receive_message().await);
 
                     // 处理接收信息

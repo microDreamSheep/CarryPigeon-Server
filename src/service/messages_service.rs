@@ -343,7 +343,6 @@ impl MessageService {
         }
         // 当message为binary信号时
         else if message.is_binary() {
-            // 先接收文件，再使用ClamAV对其进行扫描
         }
 
         // 处理消息
@@ -407,6 +406,12 @@ impl MessageService {
     /// 接受信息
     pub async fn receive_message(&self) -> Option<GlobalMessageWithType> {
         <MessageService as SystemMessageService>::receive_message(self).await
+    }
+    pub async fn handle_ping_message(&self, message: Message) -> bool {
+        if message.is_ping() {
+            return true;
+        }
+        false
     }
 }
 
