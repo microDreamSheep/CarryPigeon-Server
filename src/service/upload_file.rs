@@ -34,7 +34,7 @@ impl PasteId<'_> {
 
         Self(Cow::Owned(id))
     }
-    pub fn file_path(&self, file_name: String) -> PathBuf {
+    pub fn file_path(&self, file_name: &String) -> PathBuf {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/", "upload_file", "/");
         Path::new(root).join(file_name).join(self.0.as_ref())
     }
@@ -64,17 +64,17 @@ pub async fn upload_file(file_name: String, paste: Data<'_>) -> std::io::Result<
     let id = PasteId::new(ID_SIZE);
     paste
         .open(10.mebibytes())
-        .into_file(id.file_path(file_name.clone()))
+        .into_file(id.file_path(&file_name))
         .await?;
     Ok(uri!(HOST.clone(), retrieve(file_name, id)).to_string())
 }
 
 #[get("/<file_name>/<id>")]
 pub async fn retrieve(file_name: String, id: PasteId<'_>) -> Option<RawText<File>> {
-    File::open(id.file_path(file_name)).await.map(RawText).ok()
+    File::open(id.file_path(&file_name)).await.map(RawText).ok()
 }
 
 #[delete("/<file_name>/<id>")]
 pub async fn delete(file_name: String, id: PasteId<'_>) -> Option<()> {
-    fs::remove_file(id.file_path(file_name)).await.ok()
+    fs::remove_file(id.file_path(&file_name)).await.ok()
 }

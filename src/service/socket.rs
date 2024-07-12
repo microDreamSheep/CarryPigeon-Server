@@ -42,7 +42,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 service.receive_offline_message().await;
 
                 socket_offline_message(info.uuid).await;
-                update_status(info.uuid, to_user_status(&UserStatus::Online).await).await;
+                update_status(info.uuid, &to_user_status(&UserStatus::Online).await).await;
 
                 while let Some(message) = stream.next().await {
                     // 获取message
@@ -67,7 +67,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                         }
                     }
                 }
-                update_status(info.uuid, to_user_status(&UserStatus::Offline).await).await;
+                update_status(info.uuid, &to_user_status(&UserStatus::Offline).await).await;
                 drop(
                     WS_HASHMAP
                         .get()

@@ -7,7 +7,7 @@ use super::row::UserToken;
 use super::PG_POOL;
 
 #[instrument]
-pub async fn push_token(uuid: i64, public_key: String) -> bool {
+pub async fn push_token(uuid: i64, public_key: &String) -> bool {
     let rows_temp = sqlx::query("INSERT INTO public.user_token (uuid,public_key) VALUES($1 , $2)")
         .bind(uuid)
         .bind(public_key)

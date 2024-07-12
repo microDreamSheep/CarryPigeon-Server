@@ -60,7 +60,7 @@ pub async fn authenticator_encrypt(sub: i64, iat: i64, exp: i64) -> String {
     ) {
         Ok(v) => {
             spawn(async move {
-                push_token(sub, public_key.to_public_key_pem(LineEnding::CR).unwrap()).await;
+                push_token(sub, &public_key.to_public_key_pem(LineEnding::CR).unwrap()).await;
             });
             v
         }

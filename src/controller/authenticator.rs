@@ -9,10 +9,10 @@ pub struct AuthInfo {
     password: String,
 }
 #[inline]
-pub async fn to_user_status(matcher: &crate::dao::row::UserStatus) -> &str {
+pub async fn to_user_status(matcher: &crate::dao::row::UserStatus) -> String {
     match matcher {
-        crate::dao::row::UserStatus::Online => "Online",
-        crate::dao::row::UserStatus::Offline => "Offline",
+        crate::dao::row::UserStatus::Online => String::from("Online"),
+        crate::dao::row::UserStatus::Offline => String::from("Offline"),
     }
 }
 
@@ -21,7 +21,7 @@ pub async fn post_authenticator(info: Form<AuthInfo>) -> String {
     // 验证密码
     let matcher = crate::dao::user::get_password(info.uuid).await;
     if matcher == info.password {
-        if crate::dao::user::update_status(info.uuid, to_user_status(&UserStatus::Online).await)
+        if crate::dao::user::update_status(info.uuid, &to_user_status(&UserStatus::Online).await)
             .await
         {
             let iat = Utc::now();
