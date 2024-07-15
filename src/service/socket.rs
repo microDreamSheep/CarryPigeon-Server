@@ -102,6 +102,8 @@ async fn socket_offline_message(uuid: i64) -> Vec<Vec<u8>> {
             json: i.json,
             timestamp: i.timestamp,
             message_id: i.message_id,
+            aes_key: i.aes_key,
+            aes_iv: i.aes_iv,
         };
         let temp_json = serde_json::to_vec(&temp_chat_offline_message).unwrap();
         vec_messages_json.push(temp_json);

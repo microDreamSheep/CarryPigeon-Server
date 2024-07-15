@@ -38,6 +38,8 @@ pub trait GroupMessageService {
         file_path: String,
         json: String,
         timestamp: String,
+        aes_key: String,
+        aes_iv: String,
     ) -> impl Future<Output = ()> + Send;
     fn delete_message(&self, group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
@@ -52,6 +54,8 @@ pub trait PrivateMessageService {
         file_path: String,
         json: String,
         timestamp: String,
+        aes_key: String,
+        aes_iv: String,
     ) -> impl Future<Output = ()> + Send;
     fn delete_message(
         &self,
@@ -80,6 +84,8 @@ impl GroupMessageService for MessageService {
         file_path: String,
         json: String,
         timestamp: String,
+        aes_key: String,
+        aes_iv: String,
     ) {
         // 查表找出最后一条信息的id
         let id = group_message::get_latest_message_id(group_id)
@@ -95,6 +101,8 @@ impl GroupMessageService for MessageService {
             json,
             timestamp,
             message_id: id,
+            aes_key,
+            aes_iv,
         });
 
         // 保存到数据库
@@ -154,6 +162,8 @@ impl PrivateMessageService for MessageService {
         file_path: String,
         json: String,
         timestamp: String,
+        aes_key: String,
+        aes_iv: String,
     ) {
         // 查表找出最后一条信息的id
         let id = private_message::get_latest_message_id(from, to)
@@ -169,6 +179,8 @@ impl PrivateMessageService for MessageService {
             json,
             timestamp,
             message_id: id,
+            aes_key,
+            aes_iv,
         };
 
         // 保存到数据库
@@ -366,7 +378,7 @@ impl MessageService {
                         let _: () = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
                     };
                     <MessageService as GroupMessageService>::send_message(
-                        self, v.to, v.from, v.text, v.file, v.json, timestamp,
+                        self, v.to, v.from, v.text, v.file, v.json, timestamp,v.aes_key,v.aes_iv
                     )
                     .await;
                 }
@@ -376,7 +388,7 @@ impl MessageService {
                         let _: () = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
                     };
                     <MessageService as PrivateMessageService>::send_message(
-                        self, v.to, v.from, v.text, v.file, v.json, timestamp,
+                        self, v.to, v.from, v.text, v.file, v.json, timestamp,v.aes_key,v.aes_iv
                     )
                     .await;
                 }

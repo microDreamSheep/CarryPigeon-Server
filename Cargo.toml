@@ -23,3 +23,5 @@ jsonwebtoken= {version = "9.3.0", features = ["use_pem"]}
 rsa = "0.9.6"
 rand = {version = "0.8.5", features = ["std_rng"]}
 pkcs8 = {version = "0.10.2", features = ["alloc"]}
+aes-gcm = "0.10.3"
+cbc = {version = "0.1.2", features = ["block-padding","alloc"]}

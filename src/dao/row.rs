@@ -40,6 +40,8 @@ pub struct SocketMessageInfo {
     pub text: String,
     pub file: String,
     pub json: String,
+    pub aes_key:String,
+    pub aes_iv:String,
 }
 
 #[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]
@@ -51,6 +53,8 @@ pub struct GlobalMessage {
     pub json: String,
     pub timestamp: String,
     pub message_id: i64,
+    pub aes_key:String,
+    pub aes_iv:String,
 }
 
 #[derive(sqlx::FromRow, Clone, Default, Debug, Deserialize, Serialize)]

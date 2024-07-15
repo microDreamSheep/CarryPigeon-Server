@@ -21,6 +21,27 @@ pub async fn get_latest_message_id(group_id: i64) -> Option<i64> {
     }
 }
 
+pub async fn get_message(group_id: i64,message_id: i64) -> Option<GlobalMessage> {
+    let sql = format!(
+        r#"SELECT * FROM "group".group_{} WHERE {}"#,
+        group_id,
+        message_id
+    );
+    let rows_temp = Box::new(
+        sqlx::query_as::<_, GlobalMessage>(&sql)
+            .fetch_one(PG_POOL.get().unwrap())
+            .await,
+    );
+    match *rows_temp {
+        Ok(v) => Some(v),
+        Err(e) => {
+            tracing::error!("Missing group_id:{} or other error.Info:{}", group_id, e);
+            // 表示查询失败
+            None
+        }
+    }
+}
+
 pub async fn push_group_message(message: &GlobalMessage) {
     let sql = format!(
         r#"INSERT INTO "group".group_{} ("from", group_id, text, file_path, json, timestamp, message_id) VALUES($1, $2, $3, $4, $5, $6, $7)"#,
