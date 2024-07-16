@@ -1,12 +1,8 @@
+use crate::controller::decode_message::Aes256CbcDec;
+
 use super::{row::GlobalMessage, PG_POOL};
 
-use aes_gcm::aes::{
-    cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit},
-    Aes256,
-};
-
-pub type Aes256CbcEnc = cbc::Encryptor<Aes256>;
-pub type Aes256CbcDec = cbc::Decryptor<Aes256>;
+use aes_gcm::aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 
 pub async fn get_latest_message_id(group_id: i64) -> Option<i64> {
     let sql = format!(
@@ -50,7 +46,7 @@ pub async fn get_message(group_id: i64, message_id: i64) -> Option<GlobalMessage
     }
 }
 
-pub async fn get_message_vec(
+pub async fn get_messages_vec(
     group_id: i64,
     id_from: i64,
     id_to: i64,
@@ -83,7 +79,8 @@ pub async fn get_message_vec(
     Some(rows_temp_vec)
 }
 
-pub async fn decode_message(group_id: i64, message_id: i64) -> String {
+pub async fn decode_message(group_id: i64, message_id: i64) -> Vec<String> {
+    let mut result = vec![];
     //获取信息
     let message = Box::new(get_message(group_id, message_id).await.unwrap());
     let cipher = Box::new(
@@ -93,7 +90,8 @@ pub async fn decode_message(group_id: i64, message_id: i64) -> String {
     let decoded_message = cipher
         .decrypt_padded_vec_mut::<Pkcs7>(message.text.as_bytes())
         .unwrap();
-    String::from_utf8(decoded_message).unwrap()
+    result.push(String::from_utf8(decoded_message).unwrap());
+    result
 }
 
 pub async fn decode_messages_vec(
@@ -103,7 +101,7 @@ pub async fn decode_messages_vec(
 ) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     //获取信息
-    let message = get_message_vec(group_id, message_id_from, message_id_to)
+    let message = get_messages_vec(group_id, message_id_from, message_id_to)
         .await
         .unwrap();
     for i in message {

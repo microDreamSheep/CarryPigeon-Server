@@ -1,4 +1,7 @@
+use aes_gcm::aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
+
 use super::{row::GlobalMessage, PG_POOL};
+use crate::controller::decode_message::Aes256CbcDec;
 
 /// !Undefined
 pub async fn get_offline_message(_uuid: i64) -> Vec<GlobalMessage> {
@@ -99,17 +102,92 @@ pub async fn delete_private_message(id: i64, from: i64, to: i64, message_id: i64
         .await;
 }
 
-pub async fn get_message(_from: i64, to: i64, message_id: i64) -> GlobalMessage {
+pub async fn get_message(from: i64, to: i64, message_id: i64) -> GlobalMessage {
     let sql = format!(
-        r#"SELECT * FROM private_message.private_message_{} WHERE message_id = $1"#,
-        to
+        r#"SELECT * FROM private_message.private_message_{} WHERE "from" = $1 "to" = $2 message_id = $3"#,
+        from
     );
     let rows_temp = Box::new(
         sqlx::query_as::<_, GlobalMessage>(&sql)
+            .bind(from)
+            .bind(to)
             .bind(message_id)
             .fetch_one(PG_POOL.get().unwrap())
             .await
             .unwrap(),
     );
     *rows_temp
+}
+
+pub async fn get_messages_vec(
+    from: i64,
+    to: i64,
+    id_from: i64,
+    id_to: i64,
+) -> Option<Vec<GlobalMessage>> {
+    let sql = format!(
+        r#"SELECT * FROM private_message.private_message_{} WHERE from = $1 to = $2 message_id = $3"#,
+        from
+    );
+    // 初始化数组，使用with_capacity可以提高性能
+    let mut rows_temp_vec: Vec<GlobalMessage> = Vec::with_capacity((id_to - id_from) as usize);
+    for i in id_from..id_to {
+        let rows_temp = Box::new(
+            sqlx::query_as::<_, GlobalMessage>(&sql)
+                .bind(from)
+                .bind(to)
+                .bind(i)
+                .fetch_one(PG_POOL.get().unwrap())
+                .await,
+        );
+        match *rows_temp {
+            Ok(v) => rows_temp_vec.push(v),
+            Err(e) => {
+                tracing::error!("{}", e);
+                // 表示查询失败
+                return None;
+            }
+        }
+    }
+    if rows_temp_vec.is_empty() {
+        return None;
+    }
+    Some(rows_temp_vec)
+}
+
+pub async fn decode_message(from: i64, to: i64, message_id: i64) -> Vec<String> {
+    let mut result = vec![];
+    let message = Box::new(get_message(from, to, message_id).await);
+    let cipher = Box::new(
+        Aes256CbcDec::new_from_slices(message.aes_key.as_bytes(), message.aes_iv.as_bytes())
+            .unwrap(),
+    );
+    let decoded_message = cipher
+        .decrypt_padded_vec_mut::<Pkcs7>(message.text.as_bytes())
+        .unwrap();
+    result.push(String::from_utf8(decoded_message).unwrap());
+    result
+}
+
+pub async fn decode_messages_vec(
+    from: i64,
+    to: i64,
+    message_id_from: i64,
+    message_id_to: i64,
+) -> Vec<String> {
+    let mut result: Vec<String> = vec![];
+    //获取信息
+    let message = get_messages_vec(from, to, message_id_from, message_id_to)
+        .await
+        .unwrap();
+    for i in message {
+        let cipher = Box::new(
+            Aes256CbcDec::new_from_slices(i.aes_key.as_bytes(), i.aes_iv.as_bytes()).unwrap(),
+        );
+        let decoded_message = cipher
+            .decrypt_padded_vec_mut::<Pkcs7>(i.text.as_bytes())
+            .unwrap();
+        result.push(String::from_utf8(decoded_message).unwrap());
+    }
+    result
 }
