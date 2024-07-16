@@ -10,7 +10,7 @@ use std::{
 
 use crate::dao::group_message::delete_group_message;
 use crate::dao::private_message::delete_private_message;
-use crate::dao::row::SocketMessage;
+use crate::dao::row::{SocketMessage, SocketMessageInfo};
 use crate::dao::{
     group::get_all_member,
     group_message, private_message,
@@ -32,14 +32,8 @@ pub trait GroupMessageService {
     /// 向群内发送信息
     fn send_message(
         &self,
-        group_id: i64,
-        from: i64,
-        text: String,
-        file_path: String,
-        json: String,
+        info: SocketMessageInfo,
         timestamp: String,
-        aes_key: String,
-        aes_iv: String,
     ) -> impl Future<Output = ()> + Send;
     fn delete_message(&self, group_id: i64, message_id: i64) -> impl Future<Output = ()> + Send;
 }
@@ -48,14 +42,8 @@ pub trait PrivateMessageService {
     /// 向个人发送信息
     fn send_message(
         &self,
-        to: i64,
-        from: i64,
-        text: String,
-        file_path: String,
-        json: String,
+        info: SocketMessageInfo,
         timestamp: String,
-        aes_key: String,
-        aes_iv: String,
     ) -> impl Future<Output = ()> + Send;
     fn delete_message(
         &self,
@@ -76,33 +64,21 @@ pub struct MessageService {
 }
 
 impl GroupMessageService for MessageService {
-    async fn send_message(
-        &self,
-        group_id: i64,
-        from: i64,
-        text: String,
-        file_path: String,
-        json: String,
-        timestamp: String,
-        aes_key: String,
-        aes_iv: String,
-    ) {
+    async fn send_message(&self, info: SocketMessageInfo, timestamp: String) {
         // 查表找出最后一条信息的id
-        let id = group_message::get_latest_message_id(group_id)
-            .await
-            .unwrap();
+        let id = group_message::get_latest_message_id(info.to).await.unwrap();
 
         // 构造数据
         let message_structure = Box::new(GlobalMessage {
-            from,
-            to: group_id,
-            text,
-            file: file_path,
-            json,
+            from: info.from,
+            to: info.to,
+            text: info.text,
+            file: info.file,
+            json: info.json,
             timestamp,
             message_id: id,
-            aes_key,
-            aes_iv,
+            aes_key: info.aes_key,
+            aes_iv: info.aes_iv,
         });
 
         // 保存到数据库
@@ -116,8 +92,8 @@ impl GroupMessageService for MessageService {
             let new_message = Box::new(
                 serde_json::to_string(&GlobalMessageWithType {
                     message_type: 0,
-                    from,
-                    to: group_id,
+                    from: message_structure.from,
+                    to: message_structure.to,
                     text: message_structure.text.clone(),
                     file: message_structure.file.clone(),
                     json: message_structure.json.clone(),
@@ -138,7 +114,7 @@ impl GroupMessageService for MessageService {
         };
         group_message::push_group_message(&message_structure).await;
 
-        let vec_member = get_all_member(group_id).await;
+        let vec_member = get_all_member(info.to).await;
         for i in vec_member {
             let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&i) {
                 // 该用户在线
@@ -154,33 +130,23 @@ impl GroupMessageService for MessageService {
 }
 
 impl PrivateMessageService for MessageService {
-    async fn send_message(
-        &self,
-        to: i64,
-        from: i64,
-        text: String,
-        file_path: String,
-        json: String,
-        timestamp: String,
-        aes_key: String,
-        aes_iv: String,
-    ) {
+    async fn send_message(&self, info: SocketMessageInfo, timestamp: String) {
         // 查表找出最后一条信息的id
-        let id = private_message::get_latest_message_id(from, to)
+        let id = private_message::get_latest_message_id(info.from, info.to)
             .await
             .unwrap();
 
         // 构造数据
         let message_structure = GlobalMessage {
-            from,
-            to,
-            text,
-            file: file_path,
-            json,
+            from: info.from,
+            to: info.to,
+            text: info.text,
+            file: info.file,
+            json: info.json,
             timestamp,
             message_id: id,
-            aes_key,
-            aes_iv,
+            aes_key: info.aes_key,
+            aes_iv: info.aes_iv,
         };
 
         // 保存到数据库
@@ -194,8 +160,8 @@ impl PrivateMessageService for MessageService {
             let new_message = Box::new(
                 serde_json::to_string(&GlobalMessageWithType {
                     message_type: 1,
-                    from,
-                    to,
+                    from: message_structure.from,
+                    to: message_structure.to,
                     text: message_structure.text.clone(),
                     file: message_structure.file.clone(),
                     json: message_structure.json.clone(),
@@ -216,13 +182,19 @@ impl PrivateMessageService for MessageService {
         };
         private_message::push_private_message(&message_structure).await;
 
-        let _ = match WS_HASHMAP.get().unwrap().lock().unwrap().get(&to) {
+        let _ = match WS_HASHMAP
+            .get()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .get(&message_structure.to)
+        {
             // 该用户在线
             Some(v) => {
                 let result_message_structure = GlobalMessageWithType {
                     message_type: 1,
-                    from,
-                    to,
+                    from: message_structure.from,
+                    to: message_structure.to,
                     text: message_structure.text,
                     file: message_structure.file,
                     json: message_structure.json,
@@ -377,20 +349,15 @@ impl MessageService {
                     unsafe {
                         let _: () = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
                     };
-                    <MessageService as GroupMessageService>::send_message(
-                        self, v.to, v.from, v.text, v.file, v.json, timestamp,v.aes_key,v.aes_iv
-                    )
-                    .await;
+                    <MessageService as GroupMessageService>::send_message(self, v, timestamp).await;
                 }
                 // 处理私聊信息
                 else if v.message_type == 1 {
                     unsafe {
                         let _: () = REDIS_POOL.get_mut().unwrap().del(self.uuid).await.unwrap();
                     };
-                    <MessageService as PrivateMessageService>::send_message(
-                        self, v.to, v.from, v.text, v.file, v.json, timestamp,v.aes_key,v.aes_iv
-                    )
-                    .await;
+                    <MessageService as PrivateMessageService>::send_message(self, v, timestamp)
+                        .await;
                 }
             }
             // 处理信息的删除

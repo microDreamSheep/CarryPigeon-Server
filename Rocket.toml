@@ -1,7 +1,7 @@
 [default]
 # release 0.0.0.0
 address = "127.0.0.1"
-port = 443
+port = 2024
 workers = 16
 max_blocking = 512
 ident = "CarryPigeon"

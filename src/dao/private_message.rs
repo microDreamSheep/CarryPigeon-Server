@@ -1,5 +1,6 @@
 use super::{row::GlobalMessage, PG_POOL};
 
+/// !Undefined
 pub async fn get_offline_message(_uuid: i64) -> Vec<GlobalMessage> {
     vec![]
 }
@@ -67,6 +68,22 @@ pub async fn push_private_message(message: &GlobalMessage) {
         Ok(_) => {}
         Err(e) => tracing::error!("{}", e),
     }
+    let rows_temp = Box::new(
+        sqlx::query(&sql)
+            .bind(message.to)
+            .bind(message.from)
+            .bind(message.text.clone())
+            .bind(message.file.clone())
+            .bind(message.json.clone())
+            .bind(message.timestamp.clone())
+            .bind(message.message_id)
+            .execute(PG_POOL.get().unwrap())
+            .await,
+    );
+    match *rows_temp {
+        Ok(_) => {}
+        Err(e) => tracing::error!("{}", e),
+    }
 }
 
 pub async fn delete_private_message(id: i64, from: i64, to: i64, message_id: i64) {
@@ -80,4 +97,19 @@ pub async fn delete_private_message(id: i64, from: i64, to: i64, message_id: i64
         .bind(message_id)
         .execute(PG_POOL.get().unwrap())
         .await;
+}
+
+pub async fn get_message(_from: i64, to: i64, message_id: i64) -> GlobalMessage {
+    let sql = format!(
+        r#"SELECT * FROM private_message.private_message_{} WHERE message_id = $1"#,
+        to
+    );
+    let rows_temp = Box::new(
+        sqlx::query_as::<_, GlobalMessage>(&sql)
+            .bind(message_id)
+            .fetch_one(PG_POOL.get().unwrap())
+            .await
+            .unwrap(),
+    );
+    *rows_temp
 }

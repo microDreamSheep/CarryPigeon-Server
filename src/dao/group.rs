@@ -158,7 +158,9 @@ pub async fn push_new_group(group: &Group) -> i64 {
     file_path  text,
     json       json,
     timestamp  varchar,
-    message_id bigint
+    message_id bigint,
+    aes_key    text,
+    aes_iv     text
 );
 "#,
         group_id
@@ -205,4 +207,14 @@ async fn get_latest_group_id() -> Option<i64> {
             None
         }
     }
+}
+
+pub async fn group_authentication(uuid: i64, group_id: i64) -> bool {
+    let member = get_all_member(group_id).await;
+    for i in member {
+        if i == uuid {
+            return true;
+        }
+    }
+    false
 }

@@ -28,7 +28,9 @@ create table "group".group_message_template
     file_path  text,
     json       json,
     timestamp  varchar,
-    message_id bigint
+    message_id bigint,
+    aes_key    text,
+    aes_iv     text
 );
 
 create table private_message.private_message_template
@@ -39,7 +41,9 @@ create table private_message.private_message_template
     file_path  text,
     json       json,
     timestamp  varchar not null,
-    message_id bigint
+    message_id bigint,
+    aes_key    text,
+    aes_iv     text
 );
 
 

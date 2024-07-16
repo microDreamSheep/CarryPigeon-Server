@@ -15,7 +15,8 @@ use rocket::{
     uri, UriDisplayPath,
 };
 
-static HOST: Absolute<'static> = uri!("https://0.0.0.0:32");
+// release 2024 -> 43
+static HOST: Absolute<'static> = uri!("https://0.0.0.0:2024");
 // 控制分配文件上传ID大小
 const ID_SIZE: usize = 25;
 
@@ -66,15 +67,15 @@ pub async fn upload_file(file_name: String, paste: Data<'_>) -> std::io::Result<
         .open(10.mebibytes())
         .into_file(id.file_path(&file_name))
         .await?;
-    Ok(uri!(HOST.clone(), retrieve(file_name, id)).to_string())
+    Ok(uri!(HOST.clone(), retrieve_file(file_name, id)).to_string())
 }
 
 #[get("/<file_name>/<id>")]
-pub async fn retrieve(file_name: String, id: PasteId<'_>) -> Option<RawText<File>> {
+pub async fn retrieve_file(file_name: String, id: PasteId<'_>) -> Option<RawText<File>> {
     File::open(id.file_path(&file_name)).await.map(RawText).ok()
 }
 
 #[delete("/<file_name>/<id>")]
-pub async fn delete(file_name: String, id: PasteId<'_>) -> Option<()> {
+pub async fn delete_file(file_name: String, id: PasteId<'_>) -> Option<()> {
     fs::remove_file(id.file_path(&file_name)).await.ok()
 }

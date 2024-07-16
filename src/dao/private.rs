@@ -4,7 +4,7 @@ use super::PG_POOL;
 pub async fn new_private_message_table(id: i64) {
     // 创建表
     let sql = format!(
-        r#"create table private_message.{}
+        r#"create table private_message.private_message_{}
 (
     "from"     bigint  not null,
     "to"       bigint  not null,
@@ -12,7 +12,9 @@ pub async fn new_private_message_table(id: i64) {
     file_path  text,
     json       json,
     timestamp  varchar not null,
-    message_id bigint
+    message_id bigint,
+    aes_key    text,
+    aes_iv     text
 );"#,
         id
     );
