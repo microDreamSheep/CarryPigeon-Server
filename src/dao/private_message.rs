@@ -94,15 +94,21 @@ pub async fn delete_private_message(id: i64, from: i64, to: i64, message_id: i64
         r#"DELETE private_message.private_message_{} WHERE "from" = $1 "to" = $2 message_id = $3"#,
         id
     );
-    let _ = sqlx::query(&sql)
-        .bind(from)
-        .bind(to)
-        .bind(message_id)
-        .execute(PG_POOL.get().unwrap())
-        .await;
+    let rows_temp = Box::new(
+        sqlx::query(&sql)
+            .bind(from)
+            .bind(to)
+            .bind(message_id)
+            .execute(PG_POOL.get().unwrap())
+            .await,
+    );
+    match *rows_temp {
+        Ok(_) => {}
+        Err(e) => tracing::error!("{}", e),
+    }
 }
 
-pub async fn get_message(from: i64, to: i64, message_id: i64) -> GlobalMessage {
+pub async fn get_message(from: i64, to: i64, message_id: i64) -> Option<GlobalMessage> {
     let sql = format!(
         r#"SELECT * FROM private_message.private_message_{} WHERE "from" = $1 "to" = $2 message_id = $3"#,
         from
@@ -113,10 +119,15 @@ pub async fn get_message(from: i64, to: i64, message_id: i64) -> GlobalMessage {
             .bind(to)
             .bind(message_id)
             .fetch_one(PG_POOL.get().unwrap())
-            .await
-            .unwrap(),
+            .await,
     );
-    *rows_temp
+    match *rows_temp {
+        Ok(v) => Some(v),
+        Err(e) => {
+            tracing::error!("{}", e);
+            None
+        }
+    }
 }
 
 pub async fn get_messages_vec(
@@ -158,15 +169,19 @@ pub async fn get_messages_vec(
 pub async fn decode_message(from: i64, to: i64, message_id: i64) -> Vec<String> {
     let mut result = vec![];
     let message = Box::new(get_message(from, to, message_id).await);
-    let cipher = Box::new(
-        Aes256CbcDec::new_from_slices(message.aes_key.as_bytes(), message.aes_iv.as_bytes())
-            .unwrap(),
-    );
-    let decoded_message = cipher
-        .decrypt_padded_vec_mut::<Pkcs7>(message.text.as_bytes())
-        .unwrap();
-    result.push(String::from_utf8(decoded_message).unwrap());
-    result
+    match *message {
+        Some(v) => {
+            let cipher = Box::new(
+                Aes256CbcDec::new_from_slices(v.aes_key.as_bytes(), v.aes_iv.as_bytes()).unwrap(),
+            );
+            let decoded_message = cipher
+                .decrypt_padded_vec_mut::<Pkcs7>(v.text.as_bytes())
+                .unwrap();
+            result.push(String::from_utf8(decoded_message).unwrap());
+            result
+        }
+        None => result,
+    }
 }
 
 pub async fn decode_messages_vec(

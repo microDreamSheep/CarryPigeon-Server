@@ -3,7 +3,7 @@ struct ClamAV {
 }
 
 impl ClamAV {
-    async fn new() -> Self {
+    pub async fn new() -> Self {
         Self {}
     }
 }
