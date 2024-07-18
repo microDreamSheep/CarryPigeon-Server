@@ -1,0 +1,42 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup Redis
+      uses: zhulik/redis-action@1.1.0
+      with:
+      # Version of Redis to use
+        redis version: 7.0.15 # optional, default is latest
+      # Number of Redis databases
+        number of databases: 16 # optional, default is 16
+
+    - name: Setup PostgreSQL
+      uses: Harmon758/postgresql-action@v1.0.0
+      with:
+        # Version of PostgreSQL to use
+        postgresql version: 16.3 # optional, default is latest
+        # POSTGRES_DB - name for the default database that is created
+        postgresql db: "carrypigeon" # optional, default is 
+        # POSTGRES_USER - create the specified user with superuser power
+        postgresql user: "carrypigeon" # optional, default is 
+        # POSTGRES_PASSWORD - superuser password
+        postgresql password: "carrypigeon" # optional, default is 
+        
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
