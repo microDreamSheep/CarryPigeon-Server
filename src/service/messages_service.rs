@@ -322,7 +322,7 @@ impl MessageService {
     /// 信息服务
     pub async fn message_service(&self, message: Message) {
         // 当message为close or empty信号时
-        if message.is_close() || message.is_empty() {
+        if message.is_empty() {
             return;
         }
         // 当message为binary信号时
@@ -386,8 +386,14 @@ impl MessageService {
     pub async fn receive_message(&self) -> Option<GlobalMessageWithType> {
         <MessageService as SystemMessageService>::receive_message(self).await
     }
-    pub async fn handle_ping_message(&self, message: Message) -> bool {
+    pub async fn handle_ping_message(&self, message: &Message) -> bool {
         if message.is_ping() {
+            return true;
+        }
+        false
+    }
+    pub async fn handle_close_message(&self, message: &Message) -> bool {
+        if message.is_close() {
             return true;
         }
         false

@@ -16,13 +16,18 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
             // 最终可获得UserToken
             let info: Box<UserToken> = Box::new(match stream.next().await {
                 Some(v) => match v {
-                    Ok(v) => match from_str(v.to_text().unwrap()) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            tracing::error!("{}", e);
-                            UserToken::default()
+                    Ok(v) => {
+                        if v.is_close() {
+                            return Ok(());
                         }
-                    },
+                        match from_str(v.to_text().unwrap()) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                tracing::error!("{}", e);
+                                UserToken::default()
+                            }
+                        }
+                    }
                     Err(e) => {
                         tracing::error!("{}", e);
                         UserToken::default()
@@ -45,14 +50,23 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                 update_status(info.uuid, &to_user_status(&UserStatus::Online).await).await;
 
                 while let Some(message) = stream.next().await {
+                    if message.is_err() {
+                        drop_ws_hashmap(&info.uuid, service).await;
+                        return Ok(());
+                    }
                     // 获取message
                     let message = message.unwrap();
-                    // service
-                    if service.handle_ping_message(message.clone()).await {
+                    // 提前处理关闭连接信号和ping信号
+                    if service.handle_close_message(&message).await {
+                        drop_ws_hashmap(&info.uuid, service).await;
+                        return Ok(());
+                    } else if service.handle_ping_message(&message).await {
                         let _ = stream
                             .send(rocket_ws::Message::Pong(String::from("pong").into_bytes()))
                             .await;
                     }
+
+                    // message_service
                     service.message_service(message.clone()).await;
                     let receive_message = Box::new(service.receive_message().await);
 
@@ -68,23 +82,28 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'
                     }
                 }
                 update_status(info.uuid, &to_user_status(&UserStatus::Offline).await).await;
-                drop(
-                    WS_HASHMAP
-                        .get()
-                        .unwrap()
-                        .lock()
-                        .unwrap()
-                        .get(&info.uuid)
-                        .unwrap()
-                        .to_owned(),
-                );
-                WS_HASHMAP.get().unwrap().lock().unwrap().remove(&info.uuid);
+                drop_ws_hashmap(&info.uuid, service).await;
                 Ok(())
             } else {
                 Ok(())
             }
         })
     })
+}
+
+async fn drop_ws_hashmap(uuid: &i64, service: Box<MessageService>) {
+    drop(
+        WS_HASHMAP
+            .get()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .get(uuid)
+            .unwrap()
+            .to_owned(),
+    );
+    WS_HASHMAP.get().unwrap().lock().unwrap().remove(uuid);
+    drop(service);
 }
 
 /// 获取离线时的信息
