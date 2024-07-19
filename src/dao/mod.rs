@@ -6,7 +6,7 @@ pub static PG_POOL: OnceLock<PgPool> = OnceLock::new();
 pub static mut REDIS_POOL: OnceLock<MultiplexedConnection> = OnceLock::new();
 
 #[inline]
-pub async fn init_pg_pool() {
+pub async fn init_pool() {
     // PostgresSQL连接
     match PoolOptions::<Postgres>::new()
         .max_connections(15)
