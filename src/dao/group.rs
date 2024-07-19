@@ -3,7 +3,7 @@ use crate::dao::row::Group;
 
 pub async fn get_member(group_id: i64) -> Vec<i64> {
     let rows_temp = Box::new(
-        sqlx::query_as::<_, Group>(r#"SELECT member FROM "group"."group" WHERE id = $1"#)
+        sqlx::query_as::<_, Group>(r#"SELECT * FROM "group"."group" WHERE id = $1"#)
             .bind(group_id)
             .fetch_one(PG_POOL.get().unwrap())
             .await,
@@ -21,7 +21,7 @@ pub async fn get_member(group_id: i64) -> Vec<i64> {
 
 pub async fn get_admin(group_id: i64) -> Vec<i64> {
     let rows_temp = Box::new(
-        sqlx::query_as::<_, Group>(r#"SELECT admin FROM "group"."group" WHERE id = $1"#)
+        sqlx::query_as::<_, Group>(r#"SELECT * FROM "group"."group" WHERE id = $1"#)
             .bind(group_id)
             .fetch_one(PG_POOL.get().unwrap())
             .await,
@@ -39,7 +39,7 @@ pub async fn get_admin(group_id: i64) -> Vec<i64> {
 
 pub async fn get_owner(group_id: i64) -> i64 {
     let rows_temp = Box::new(
-        sqlx::query_as::<_, Group>(r#"SELECT owner FROM "group"."group" WHERE id = $1"#)
+        sqlx::query_as::<_, Group>(r#"SELECT * FROM "group"."group" WHERE id = $1"#)
             .bind(group_id)
             .fetch_one(PG_POOL.get().unwrap())
             .await,
