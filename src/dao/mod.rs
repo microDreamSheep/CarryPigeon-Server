@@ -22,7 +22,7 @@ pub async fn init_pg_pool() {
             }
         },
         Err(e) => {
-            tracing::error!("{}", e);
+            tracing::error!("PostgresSQL: {}", e);
         }
     }
     // Redis连接
@@ -37,11 +37,11 @@ pub async fn init_pg_pool() {
                 }
             },
             Err(e) => {
-                tracing::error!("{}", e);
+                tracing::error!("Redis: {}", e);
             }
         },
         Err(e) => {
-            tracing::error!("{}", e);
+            tracing::error!("Redis: {}", e);
         }
     }
 }

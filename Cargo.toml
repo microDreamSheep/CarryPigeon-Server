@@ -25,3 +25,4 @@ rand = {version = "0.8.5", features = ["std_rng"]}
 pkcs8 = {version = "0.10.2", features = ["alloc"]}
 aes-gcm = "0.10.3"
 cbc = {version = "0.1.2", features = ["block-padding","alloc"]}
+thiserror = "1.0.63"
