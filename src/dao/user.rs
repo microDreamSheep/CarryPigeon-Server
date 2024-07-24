@@ -91,7 +91,7 @@ pub async fn push_user(info: &CreateAccountRequest) -> Option<i64> {
             match *rows_temp {
                 Ok(_) => Some(v.uuid + 1),
                 Err(e) => {
-                    tracing::error!("Error updating user status to database : {}", e);
+                    tracing::error!("Error : {}", e);
                     None
                 }
             }
