@@ -103,3 +103,9 @@ pub struct CreateGroupRequest {
     pub token: String,
     pub member: Vec<i64>,
 }
+
+#[derive(sqlx::FromRow, FromForm, Clone, Debug, Deserialize, Serialize)]
+pub struct CreateAccountRequest {
+    pub username: String,
+    pub password: String,
+}

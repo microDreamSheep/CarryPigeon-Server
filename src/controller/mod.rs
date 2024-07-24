@@ -1,3 +1,4 @@
+pub mod account;
 pub mod authenticator;
 pub mod decode_message;
 pub mod group;
