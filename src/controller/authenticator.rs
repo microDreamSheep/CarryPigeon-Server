@@ -9,10 +9,10 @@ pub struct AuthInfo {
     password: String,
 }
 #[inline]
-pub async fn to_user_status(matcher: &crate::dao::row::UserStatus) -> String {
+pub async fn to_user_status(matcher: &UserStatus) -> String {
     match matcher {
-        crate::dao::row::UserStatus::Online => String::from("Online"),
-        crate::dao::row::UserStatus::Offline => String::from("Offline"),
+        UserStatus::Online => String::from("Online"),
+        UserStatus::Offline => String::from("Offline"),
     }
 }
 

@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::service::clamav::ClamAV;
 use rand::{thread_rng, Rng};
 use rocket::tokio::fs::{self, File};
 use rocket::{
@@ -67,7 +68,20 @@ pub async fn upload_file(file_name: String, paste: Data<'_>) -> std::io::Result<
         .open(10.mebibytes())
         .into_file(id.file_path(&file_name))
         .await?;
-    Ok(uri!(HOST.clone(), retrieve_file(file_name, id)).to_string())
+
+    // clamav-scan
+    let clamav = Box::new(ClamAV::default());
+    if clamav.ping().await.is_err()
+        || (clamav.ping().await.is_err()
+            && clamav
+                .scan_file(Box::new(id.file_path(&file_name)))
+                .await
+                .is_err())
+    {
+        Ok(String::new())
+    } else {
+        Ok(uri!(HOST.clone(), retrieve_file(file_name, id)).to_string())
+    }
 }
 
 #[get("/<file_name>/<id>")]
