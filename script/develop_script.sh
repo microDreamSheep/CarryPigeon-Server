@@ -1,2 +1,2 @@
 sudo systemctl start postgresql
-sudo systemctl start redis-server
+sudo systemctl start redis

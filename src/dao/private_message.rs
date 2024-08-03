@@ -1,7 +1,6 @@
 use aes_gcm::aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 
 use super::{row::GlobalMessage, PG_POOL};
-use crate::controller::decode_message::Aes256CbcDec;
 
 /// !Undefined
 pub async fn get_offline_message(_uuid: i64) -> Vec<GlobalMessage> {
@@ -171,13 +170,6 @@ pub async fn decode_message(from: i64, to: i64, message_id: i64) -> Vec<String> 
     let message = Box::new(get_message(from, to, message_id).await);
     match *message {
         Some(v) => {
-            let cipher = Box::new(
-                Aes256CbcDec::new_from_slices(v.aes_key.as_bytes(), v.aes_iv.as_bytes()).unwrap(),
-            );
-            let decoded_message = cipher
-                .decrypt_padded_vec_mut::<Pkcs7>(v.text.as_bytes())
-                .unwrap();
-            result.push(String::from_utf8(decoded_message).unwrap());
             result
         }
         None => result,
@@ -195,14 +187,5 @@ pub async fn decode_messages_vec(
     let message = get_messages_vec(from, to, message_id_from, message_id_to)
         .await
         .unwrap();
-    for i in message {
-        let cipher = Box::new(
-            Aes256CbcDec::new_from_slices(i.aes_key.as_bytes(), i.aes_iv.as_bytes()).unwrap(),
-        );
-        let decoded_message = cipher
-            .decrypt_padded_vec_mut::<Pkcs7>(i.text.as_bytes())
-            .unwrap();
-        result.push(String::from_utf8(decoded_message).unwrap());
-    }
     result
 }

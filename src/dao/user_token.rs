@@ -1,4 +1,3 @@
-use crate::repository::claims::RequiredClaims;
 use chrono::Utc;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use tracing::instrument;
@@ -41,36 +40,5 @@ async fn get_all_token(uuid: i64) -> Vec<String> {
 /// 匹配并验证token
 #[instrument]
 pub async fn check_token<'a>(uuid: i64, token: &'a String) -> bool {
-    let token_vec = get_all_token(uuid).await;
-
-    // 匹配 token
-    for i in token_vec {
-        match decode::<RequiredClaims>(
-            token,
-            &match DecodingKey::from_rsa_pem(i.as_bytes()) {
-                Ok(v) => v,
-                Err(e) => {
-                    tracing::error!("{}", e);
-                    return false;
-                }
-            },
-            &Validation::new(Algorithm::RS256),
-        ) {
-            Ok(v) => {
-                // 验证token的有效时间
-                let time = Utc::now().timestamp();
-                if v.claims.exp >= time {
-                    return true;
-                } else if v.claims.exp < time {
-                    return false;
-                }
-                return false;
-            }
-            Err(_) => {
-                // 该PublicKey无法解密，但可以继续尝试其他PublicKey，故continue
-                continue;
-            }
-        }
-    }
     false
 }

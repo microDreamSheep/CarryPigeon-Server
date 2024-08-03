@@ -1,5 +1,4 @@
 use crate::dao::row::UserStatus;
-use crate::repository::jwt::authenticator_encrypt;
 use chrono::{Duration, Utc};
 use rocket::{form::Form, FromForm};
 
@@ -26,7 +25,7 @@ pub async fn post_authenticator(info: Form<AuthInfo>) -> String {
         {
             let iat = Utc::now();
             let exp = iat + Duration::days(72);
-            authenticator_encrypt(info.uuid, iat.timestamp(), exp.timestamp()).await
+            "s".to_string()
         } else {
             String::from("false")
         }
@@ -34,3 +33,5 @@ pub async fn post_authenticator(info: Form<AuthInfo>) -> String {
         String::from("false")
     }
 }
+
+// TODO 建立连接

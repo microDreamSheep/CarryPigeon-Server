@@ -1,5 +1,6 @@
-use crate::controller::authenticator::to_user_status;
-
+use crate::controller::account::authenticator::to_user_status;
+use crate::model::r#do::account::UserDo;
+use crate::utils::id::generate_id;
 use super::{
     row::{CreateAccountRequest, UserStatus},
     PG_POOL,
@@ -38,20 +39,14 @@ pub async fn get_status(uuid: i64) -> String {
     }
 }
 
-pub async fn get_username(uuid: i64) -> String {
+pub async fn get_username(uuid: i64) -> UserDo {
     let rows_temp = Box::new(
-        sqlx::query_as::<_, super::row::User>("SELECT * FROM public.user WHERE uuid = $1")
+        sqlx::query_as::<_, UserDo>("SELECT * FROM public.user WHERE id = $1")
             .bind(uuid)
             .fetch_one(PG_POOL.get().unwrap())
             .await,
     );
-    match *rows_temp {
-        Ok(v) => v.status,
-        Err(e) => {
-            tracing::error!("{}", e);
-            "".to_string()
-        }
-    }
+    rows_temp.unwrap()
 }
 
 pub async fn update_status(uuid: i64, status: &String) -> bool {
@@ -73,32 +68,21 @@ pub async fn update_status(uuid: i64, status: &String) -> bool {
 }
 
 pub async fn push_user(info: &CreateAccountRequest) -> Option<i64> {
-    let rows_temp = Box::new(
-        sqlx::query_as::<_, super::row::User>("SELECT MAX(uuid) uuid FROM public.user")
-            .fetch_one(PG_POOL.get().unwrap())
-            .await,
-    );
-
+    let uuid = generate_id();
+    let rows_temp = Box::new(sqlx::query(r#"INSERT INTO public.user (uuid,username,password,status) VALUES($1,$2,$3,$4)"#)
+        .bind(uuid)
+        .bind(&info.username)
+        .bind(&info.password)
+        .bind(to_user_status(&UserStatus::Offline).await)
+        .execute(PG_POOL.get().unwrap())
+        .await);
     match *rows_temp {
-        Ok(v) => {
-            let rows_temp = Box::new(sqlx::query(r#"INSERT INTO public.user (uuid,username,password,status) VALUES($1,$2,$3,$4)"#)
-                .bind(v.uuid + 1)
-                .bind(&info.username)
-                .bind(&info.password)
-                .bind(to_user_status(&UserStatus::Offline).await)
-                .execute(PG_POOL.get().unwrap())
-                .await);
-            match *rows_temp {
-                Ok(_) => Some(v.uuid + 1),
-                Err(e) => {
-                    tracing::error!("Error : {}", e);
-                    None
-                }
-            }
-        }
+        Ok(_) => Some(uuid),
         Err(e) => {
             tracing::error!("Error : {}", e);
             None
         }
     }
 }
+
+

@@ -104,6 +104,10 @@ pub struct CreateGroupRequest {
     pub member: Vec<i64>,
 }
 
+/**
+创造账户的数据结构
+包含一个用户名和密码
+ */
 #[derive(sqlx::FromRow, FromForm, Clone, Debug, Deserialize, Serialize)]
 pub struct CreateAccountRequest {
     pub username: String,

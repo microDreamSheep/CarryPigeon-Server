@@ -1,5 +1,8 @@
+//！ 相关请求处理
+
+/**
+ 账户相关模块，用于账户相关操作
+ */
 pub mod account;
-pub mod authenticator;
-pub mod decode_message;
-pub mod group;
 pub mod tree_hole;
+mod chat;

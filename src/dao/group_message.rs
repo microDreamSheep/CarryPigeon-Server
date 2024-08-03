@@ -1,4 +1,3 @@
-use crate::controller::decode_message::Aes256CbcDec;
 
 use super::{row::GlobalMessage, PG_POOL};
 
@@ -81,16 +80,6 @@ pub async fn get_messages_vec(
 
 pub async fn decode_message(group_id: i64, message_id: i64) -> Vec<String> {
     let mut result = vec![];
-    //获取信息
-    let message = Box::new(get_message(group_id, message_id).await.unwrap());
-    let cipher = Box::new(
-        Aes256CbcDec::new_from_slices(message.aes_key.as_bytes(), message.aes_iv.as_bytes())
-            .unwrap(),
-    );
-    let decoded_message = cipher
-        .decrypt_padded_vec_mut::<Pkcs7>(message.text.as_bytes())
-        .unwrap();
-    result.push(String::from_utf8(decoded_message).unwrap());
     result
 }
 
@@ -100,19 +89,6 @@ pub async fn decode_messages_vec(
     message_id_to: i64,
 ) -> Vec<String> {
     let mut result: Vec<String> = vec![];
-    //获取信息
-    let message = get_messages_vec(group_id, message_id_from, message_id_to)
-        .await
-        .unwrap();
-    for i in message {
-        let cipher = Box::new(
-            Aes256CbcDec::new_from_slices(i.aes_key.as_bytes(), i.aes_iv.as_bytes()).unwrap(),
-        );
-        let decoded_message = cipher
-            .decrypt_padded_vec_mut::<Pkcs7>(i.text.as_bytes())
-            .unwrap();
-        result.push(String::from_utf8(decoded_message).unwrap());
-    }
     result
 }
 
