@@ -1,4 +1,4 @@
-// 树洞功能
 
-use rocket::post;
-//#[post("/tree/new")]
+pub fn tree_hole_send_controller(s:String) -> String{
+    "".to_string()
+}

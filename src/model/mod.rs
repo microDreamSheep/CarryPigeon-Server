@@ -4,6 +4,10 @@
  */
 pub mod response;
 /**
- 存储数据库相关结构体，需与数据库表严格对应
+ vo模型，用于前端与controller层间传输数据
  */
-pub mod r#do;
+pub mod vo;
+/**
+ dto模型，用于controller层向service层传递数据
+ */
+pub mod dto;

@@ -5,9 +5,7 @@ use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, Registry,
 };
-use carrypigeon_server::controller::account::authenticator::post_authenticator;
-use carrypigeon_server::controller::account::user::user_register;
-use carrypigeon_server::controller::group::new_group;
+use carrypigeon_server::controller::account::user::{user_register_controller,user_login_controller};
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
@@ -38,20 +36,13 @@ async fn main() -> Result<(), rocket::Error> {
 
     // connect database
     carrypigeon_server::dao::init_pool().await;
-    carrypigeon_server::service::messages_service::init_ws_hashmap().await;
-
-    //
-    //
-    // rocket
-    use carrypigeon_server::service::socket::websocket_service;
-    use carrypigeon_server::service::upload_file::{delete_file, retrieve_file, upload_file};
 
     let _rocket = rocket::build()
-        .mount("/authenticator", routes![post_authenticator])
-        .mount("/group", routes![new_group])
-        .mount("/account/user", routes![user_register])
-        .mount("/service", routes![websocket_service])
-        .mount("/upload", routes![upload_file, retrieve_file, delete_file])
+        //.mount("/authenticator", routes![post_authenticator])
+        //.mount("/group", routes![new_group])
+        .mount("/account/user", routes![user_login_controller,user_register_controller])
+        //.mount("/service", routes![websocket_service])
+        //.mount("/upload", routes![upload_file, retrieve_file, delete_file])
         .launch()
         .await?;
     Ok(())

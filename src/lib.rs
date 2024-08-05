@@ -20,5 +20,13 @@ pub mod repository;
 /**
  工具包，包含的相关的工具函数
  */
-mod utils;
-mod model;
+pub mod utils;
+/**
+ 模型包，包含各种实体结构体和模型
+ */
+pub mod model;
+/**
+ webSocket包，用于自定义webSocket协议
+ */
+pub mod ws;
+pub mod manager;

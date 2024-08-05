@@ -36,7 +36,7 @@ impl SnowflakeIdWorker {
                        it.next_id()
                    }
                    Err(e) => {
-                       panic!("there is some wrong in get time in id,wrong msg:{}",e)
+                       panic!("there is some wrong in get id,wrong msg:{}",e)
                    }
                }
            }
