@@ -5,4 +5,8 @@
  */
 pub mod account;
 pub mod tree_hole;
-mod chat;
+pub mod chat;
+/**
+ 用于建立socket连接
+ */
+pub mod ws;

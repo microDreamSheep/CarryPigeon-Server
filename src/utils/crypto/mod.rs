@@ -27,7 +27,7 @@ pub fn aes256_cbc_encrypt(
         let result = encryptor.encrypt(&mut read_buffer, &mut write_buffer, true)?;
         final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
         match result {
-            _BufferUnderflow => break,
+            _ => break,
         }
     }
     Ok(base64::encode(&final_result))
@@ -55,7 +55,7 @@ pub fn aes256_cbc_decrypt(
         let result = decryptor.decrypt(&mut read_buffer, &mut write_buffer, true)?;
         final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
         match result {
-            _BufferUnderflow => break,
+            _ => break,
         }
     }
     Ok(String::from_utf8_lossy(final_result.as_slice()).parse().unwrap())

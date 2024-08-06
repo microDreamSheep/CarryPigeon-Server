@@ -1,3 +1,5 @@
+#![feature(fn_traits)]
+
 #[cfg(test)]
 mod test;
 
