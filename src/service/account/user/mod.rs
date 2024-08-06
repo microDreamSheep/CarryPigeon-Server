@@ -1,11 +1,10 @@
 use std::cell::RefCell;
 use std::sync::{Arc};
 use tokio::sync::Mutex;
-use rocket::futures::{SinkExt, StreamExt};
 use rocket::futures::stream::SplitSink;
 use rocket_ws::stream::DuplexStream;
 use crate::dao::account::user::User;
-use crate::manager::ws::{pop_user_stream, push_user_stream, WEB_SOCKET_MANAGER};
+use crate::manager::ws::{WEB_SOCKET_MANAGER, WebSocketManager};
 use crate::model::dto::account::user::{UserLoginDTO, UserRegisterDTO};
 use crate::model::response::Response;
 use crate::repository::account::user::{insert_user, select_user_by_name};
@@ -14,7 +13,7 @@ use crate::repository::account::user::{insert_user, select_user_by_name};
 校验用户名是否存在
 user_name:注册的用户名
  */
-pub async fn is_user_name_contained(
+pub async fn is_user_name_contained_service(
     user_name:&str
 )->bool{
     select_user_by_name(user_name).await.is_empty()
@@ -24,10 +23,10 @@ pub async fn is_user_name_contained(
 注册一个新用户
 user_info 用户名和密码的聚合类型
  */
-pub async fn new_user(
+pub async fn user_register_service(
     user_info:UserRegisterDTO
 )->Result<String,String>{
-    if !is_user_name_contained(&user_info.username).await {
+    if !is_user_name_contained_service(&user_info.username).await {
         return Err("username already exists".to_string());
     }
     if insert_user(user_info.to_do()).await {
@@ -39,7 +38,7 @@ pub async fn new_user(
 /**
  用于用户进行登录
  */
-pub async fn login(
+pub async fn user_login_service(
     user_info:UserLoginDTO
 )->Option<User>{
     let users = select_user_by_name(&user_info.username).await;
@@ -65,25 +64,42 @@ pub async fn login(
     return None;
 }
 /**
+将用户放入
 user 数据库中的user结构
 stream 两者连接的WebSocket
  */
-pub async fn push_user(
+pub async fn push_user_service(
     user:User,
-    stream:Arc<Mutex<SplitSink<DuplexStream, rocket_ws::Message>>>
+    stream:Arc<Mutex<SplitSink<DuplexStream, rocket_ws::Message>>>,
+    token:String
 ){
     // 对stream进行包装
     let id = user.id.unwrap();
     // 将其放入web ws manager进行管理
-    push_user_stream(id, stream).await;
+    WebSocketManager::push_user(id, stream, token).await;
     // 通知全局用户上线 TODO
 }
 
 /**
 id:用户id
  */
-pub async fn remove_user(id:i64){
+pub async fn remove_user_service(id:i64){
     // 删除通道
-    pop_user_stream(id).await;
+    WebSocketManager::pop_user(id).await;
     // 通知全局用户注销 TODO
+}
+
+/**
+权限校验
+ */
+pub async fn user_authority_check_service(id:&i64,token:String)->bool{
+    let user_token = WebSocketManager::get_user_token(id).await;
+    return match user_token {
+        None => {
+            false
+        }
+        Some(user_token) => {
+            user_token.eq(&token)
+        }
+    }
 }

@@ -7,6 +7,7 @@ use tracing_subscriber::{
 };
 use carrypigeon_server::controller::account::user::{user_register_controller};
 use carrypigeon_server::controller::ws::websocket_service;
+use carrypigeon_server::controller::tree_hole::tree_hole_send_controller;
 
 
 #[rocket::main]
@@ -43,6 +44,7 @@ async fn main() -> Result<(), rocket::Error> {
         //.mount("/authenticator", routes![post_authenticator])
         //.mount("/group", routes![new_group])
         .mount("/account/user", routes![websocket_service,user_register_controller])
+        .mount("/tree_hole",routes![tree_hole_send_controller])
         //.mount("/service", routes![websocket_service])
         //.mount("/upload", routes![upload_file, retrieve_file, delete_file])
         .launch()

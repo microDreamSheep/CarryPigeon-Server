@@ -1,3 +1,5 @@
+use base64::Engine;
+use base64::engine::general_purpose;
 use crypto::aes;
 use crypto::aes::KeySize::KeySize256;
 use crypto::blockmodes::PkcsPadding;
@@ -30,7 +32,7 @@ pub fn aes256_cbc_encrypt(
             _ => break,
         }
     }
-    Ok(base64::encode(&final_result))
+    Ok(general_purpose::STANDARD.encode(&final_result))
 }
 
 
@@ -68,7 +70,7 @@ pub fn rsa_encrypt(public_key: &str, data: &str) -> String {
     let mut result = vec![0; rsa.size() as usize];
     let size = rsa.public_encrypt(data.as_bytes(), &mut result, Padding::PKCS1).map_err(|e| e.to_string()).unwrap();
     result.truncate(size);
-    base64::encode(result)
+    general_purpose::STANDARD.encode(result)
 }
 
 // RSA解密
@@ -85,5 +87,5 @@ pub fn generate_rsa_key() -> (String,String) {
     let rsa = Rsa::generate(2048).map_err(|e| e.to_string()).unwrap();
     let public_key = rsa.public_key_to_der().map_err(|e| e.to_string()).unwrap();
     let private_key = rsa.private_key_to_der().map_err(|e| e.to_string()).unwrap();
-    (base64::encode(public_key),base64::encode(private_key))
+    (general_purpose::STANDARD.encode(public_key),general_purpose::STANDARD.encode(private_key))
 }

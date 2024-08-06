@@ -42,7 +42,7 @@ CREATE TABLE message (
      to_id int8 NOT NULL comment "发送到的位置",
      message_tag int4 NOT NULL comment "消息类型 1：群聊 2：私聊 3：树洞",
      "data" text NOT NULL comment "聊天数据，根据情况使用解释引擎解释",
-     message_type int4 DEFAULT 0 NOT NULL comment "用于表示消息的类型",
+     message_type int4 DEFAULT 0 NOT NULL comment "用于表示消息的类型，0为文本类型",
      "time" timestamp DEFAULT now() NOT NULL comment "消息发送时间",
      CONSTRAINT message_pk PRIMARY KEY (id)
 );

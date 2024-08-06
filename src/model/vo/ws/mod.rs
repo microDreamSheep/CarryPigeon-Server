@@ -1,4 +1,3 @@
-use rocket::FromForm;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::serde_json;
 use rocket_json_response::json_gettext::serde_json::Value;
@@ -8,7 +7,7 @@ use crate::model::dto::ws::WebSocketDataDTO;
 /**
 用户登录，用于建立websocket连接
  */
-#[derive(FromForm, Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UserLoginVo {
     /// 用户名
     pub username: String,
@@ -26,6 +25,14 @@ impl UserLoginVo {
             password:self.password
         }
     }
+}
+
+/**
+ 用户登录的返回类型
+ */
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UserLoginResponseVo {
+    pub token:String
 }
 
 /**

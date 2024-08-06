@@ -9,7 +9,7 @@ use rocket_json_response::JSONResponse;
 use tokio_test::block_on;
 use crate::model::response::Response;
 use crate::model::vo::account::user::{UserRegisterResponseVo, UserRegisterVo};
-use crate::service::account::user::{is_user_name_contained, new_user, login};
+use crate::service::account::user::{is_user_name_contained_service, user_register_service, user_login_service};
 use rocket::futures::{SinkExt, StreamExt};
 use tracing::info;
 use crate::dao::account::user::User;
@@ -30,7 +30,7 @@ use rocket_ws::stream::DuplexStream;
  */
 #[post("/register", data = "<info>")]
 pub async fn user_register_controller(info:  Json<UserRegisterVo>) -> JSONResponse<'static, UserRegisterResponseVo> {
-    let result = new_user(info.into_inner().to_dto()).await;
+    let result = user_register_service(info.into_inner().to_dto()).await;
     match result {
         Ok(_) => Response::success(UserRegisterResponseVo::success()),
         Err(e) => Response::error(UserRegisterResponseVo::error(&e)),

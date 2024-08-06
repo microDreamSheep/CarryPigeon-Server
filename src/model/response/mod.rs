@@ -62,10 +62,11 @@ impl WebSocketResponse {
 }
 
 /*标准的响应*/
-/**
- 异常的route，用于分配路径失败使用
- */
+
 lazy_static!(
+    /**
+    异常的route，用于分配路径失败使用
+     */
     pub static ref WEBSOCKET_RESPONSE_ROUTE_ERROR: WebSocketResponse = WebSocketResponse {
         code: ERROR_CODE,
         id: -1,
@@ -74,21 +75,21 @@ lazy_static!(
 );
 
 
-/**
- 异常的参数，用于参数分析失败时使用
- */
 lazy_static!(
-    pub static ref  WEBSOCKET_RESPONSE_CONTENT_STRUCTURE_ERROR:WebSocketResponse = WebSocketResponse{
+    /**
+    异常的参数，用于参数分析失败时使用
+    */
+    pub static ref WEBSOCKET_RESPONSE_CONTENT_STRUCTURE_ERROR:WebSocketResponse = WebSocketResponse{
     code: ERROR_CODE,
     id: -1,
     data: Some(json!("the analyse of the json meet some wrong")),
 };
 );
 
-/**
- 用于测试使用
- */
 lazy_static!(
+    /**
+    用于测试使用
+     */
     pub static ref WEBSOCKET_RESPONSE_ERROR:WebSocketResponse = WebSocketResponse{
     code: SUCCESS_CODE,
     id: -1,
