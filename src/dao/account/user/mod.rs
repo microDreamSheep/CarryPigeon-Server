@@ -1,4 +1,4 @@
-use rbatis::crud;
+use rbatis::{crud};
 use rbatis::rbdc::DateTime;
 use serde::{Deserialize, Serialize};
 

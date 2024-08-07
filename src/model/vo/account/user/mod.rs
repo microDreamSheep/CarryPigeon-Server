@@ -1,7 +1,7 @@
 use rocket::FromForm;
 use rocket::serde::{Deserialize, Serialize};
 use rocket_json_response::serialize_to_json;
-use crate::model::dto::account::user::{UserLoginDTO, UserRegisterDTO};
+use crate::model::dto::account::user::{UserRegisterDTO};
 
 /**
 注册账户的数据结构，用与controller接收数据

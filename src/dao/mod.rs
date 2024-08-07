@@ -1,15 +1,36 @@
-use std::fmt::{Debug, Formatter};
+/*!
+dao层，用于提供对数据库最基本的操作，通过rbatis进行提供
+dao层只能由repository层进行调用
+
+### 示例
+```rust
+// 定义示例
+use serde::{Deserialize, Serialize};
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BizActivity {}
+rbatis::crud!(BizActivity{});//crud = insert+select_by_column+update_by_column+delete_by_column
+rbatis::impl_select_page!(BizActivity{select_page(name:&str) => "`where name != #{name}`"});
+// 调用示例
+async fn fun(){
+    use carrypigeon_server::dao::MYSQL_POOL;
+    let result = BizActivity::select_all(MYSQL_POOL.get().unwrap()).await;
+}
+```
+
+ */
+
 use redis::aio::MultiplexedConnection;
 use std::sync::OnceLock;
-use rbatis::{RBatis, rbdc};
-use rbatis::rbdc::db::{Connection, ConnectOptions};
-use rbatis::rbdc::Error;
+use rbatis::{RBatis};
 use rbdc_mysql::MysqlDriver;
-use rocket::futures::future::BoxFuture;
 
 pub static MYSQL_POOL: OnceLock<RBatis> = OnceLock::new();
 pub static mut REDIS_POOL: OnceLock<MultiplexedConnection> = OnceLock::new();
 
+
+/**
+ 初始化数据库连接，连接mysql和redis并生成连接池供调用
+ */
 #[inline]
 pub async fn init_pool() {
     // mysql 连接

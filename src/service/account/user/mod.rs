@@ -1,12 +1,10 @@
-use std::cell::RefCell;
 use std::sync::{Arc};
 use tokio::sync::Mutex;
 use rocket::futures::stream::SplitSink;
 use rocket_ws::stream::DuplexStream;
 use crate::dao::account::user::User;
-use crate::manager::ws::{WEB_SOCKET_MANAGER, WebSocketManager};
+use crate::manager::ws::{WebSocketManager};
 use crate::model::dto::account::user::{UserLoginDTO, UserRegisterDTO};
-use crate::model::response::Response;
 use crate::repository::account::user::{insert_user, select_user_by_name};
 
 /**

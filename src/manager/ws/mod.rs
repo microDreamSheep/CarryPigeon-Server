@@ -1,3 +1,9 @@
+/*!
+全局通道管理，用于管理当前在线的用户及其通道
+
+所有对外提供的方法封装在WebSocketManager中
+ */
+
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 use std::sync::{Arc};
@@ -14,7 +20,7 @@ lazy_static! {
 pub struct WebSocketManager(Arc<Mutex<WebSocketManagerInner>>);
 
 impl WebSocketManager{
-    pub fn new()->WebSocketManager{
+    fn new()->WebSocketManager{
         Self(Arc::new(Mutex::new(WebSocketManagerInner::new())))
     }
 
@@ -52,17 +58,17 @@ impl WebSocketManager{
 此为简易实现 TODO 完善管理器
  */
 struct WebSocketManagerInner {
-    pub socket_map:HashMap<i64,WSUser>
+    socket_map:HashMap<i64,WSUser>
 }
 
 impl WebSocketManagerInner{
-    pub fn new()->WebSocketManagerInner{
+    fn new()->WebSocketManagerInner{
         WebSocketManagerInner{
             socket_map: HashMap::new(),
         }
     }
 
-    pub fn push(
+    fn push(
         &mut self,
         id:i64,
         ws_user: WSUser
@@ -70,14 +76,14 @@ impl WebSocketManagerInner{
         self.socket_map.insert(id, ws_user);
     }
 
-    pub fn pop(
+    fn pop(
         &mut self,
         id:i64
     ){
         self.socket_map.remove(&id);
     }
 
-    pub fn get_sender(
+    fn get_sender(
         &self,
         id:i64
     ) -> Option<Arc<Mutex<SplitSink<DuplexStream, rocket_ws::Message>>>> {
@@ -87,7 +93,7 @@ impl WebSocketManagerInner{
         Some(Arc::clone(&self.socket_map.get(&id).unwrap().sender))
     }
 
-    pub fn get_ws_user_token(
+    fn get_ws_user_token(
         &self,
         id:&i64
     ) -> Option<String> {

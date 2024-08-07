@@ -1,33 +1,29 @@
+/*!
+WebSocket连接相关客户端发送的响应协议
+
+```json
+{
+    "code":,
+    "id":,
+    "data":,
+}
+```
+code为标识码，用于标识请求是否处理成功，服务端主动发送的消息默认为SUCCESS_CODE
+
+id为标识id，用于标识本地的请求，服务端主动发送的消息默认为-1
+
+data为可选的额外数据类型，用于传递相关数据，若仅用于声明请求成功或者失败可设为None
+ */
+
 use lazy_static::lazy_static;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
-use rocket_json_response::{JSONResponse, ToJSON};
+use rocket_json_response::ToJSON;
 use serde::{Deserialize, Serialize};
-
-const SUCCESS_CODE:u32 = 200;
-const ERROR_CODE:u32 = 100;
+use crate::model::protocol::{ERROR_CODE, SUCCESS_CODE};
 
 /**
- response 用于前端进行数据交换
- */
-pub struct Response;
-
-impl Response{
-    pub fn success<'a,T: ToJSON>(data:T)->JSONResponse<'a,T>{
-        JSONResponse::err(SUCCESS_CODE,data)
-    }
-
-    pub fn error<'a,T: ToJSON>(data:T)->JSONResponse<'a,T>{
-        JSONResponse::err(ERROR_CODE,data)
-    }
-
-    pub fn response<'a,T: ToJSON>(code:u32,data:T) ->JSONResponse<'a,T>{
-        JSONResponse::err(code,data)
-    }
-}
-
-/**
- 用于websocket用于数据返回
+用于websocket用于数据返回
  */
 #[derive(Debug,Deserialize,Serialize,Clone)]
 pub struct WebSocketResponse{
@@ -78,7 +74,7 @@ lazy_static!(
 lazy_static!(
     /**
     异常的参数，用于参数分析失败时使用
-    */
+     */
     pub static ref WEBSOCKET_RESPONSE_CONTENT_STRUCTURE_ERROR:WebSocketResponse = WebSocketResponse{
     code: ERROR_CODE,
     id: -1,

@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use lazy_static::lazy_static;
 
+/*定义相关常量*/
 // 开始时间戳（2022-08-01）
 const START_TIME: u128 = 1659283200000;
 // 工作id所占位数
@@ -14,6 +15,10 @@ const WORKER_ID_SHIFT: u64 = SEQUENCE_BITS;
 const TIMESTAMP_LEFT_SHIFT: u64 = SEQUENCE_BITS + WORKER_ID_BITS;
 // 生成的序列掩码，这里是4095
 const SEQUENCE_MASK: u64 = (-1 ^ (-1 << SEQUENCE_BITS)) as u64;
+
+/**
+ 对外暴露的解库，用于通过雪花算法生成唯一性id
+ */
 pub fn generate_id()->i64{
     SNOW.clone().next_id() as i64
 }

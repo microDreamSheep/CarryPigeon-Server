@@ -1,21 +1,9 @@
-use std::future::Future;
-use std::sync::Arc;
-use rocket::{form::Form, FromForm, get, post};
-use rocket::async_stream::stream;
-use rocket::response::content::RawJson;
-use rocket::serde::{Deserialize, Serialize};
+use crate::model::protocol::http::response::HttpResponse;
+use rocket::{post};
 use rocket::serde::json::Json;
 use rocket_json_response::JSONResponse;
-use tokio_test::block_on;
-use crate::model::response::Response;
 use crate::model::vo::account::user::{UserRegisterResponseVo, UserRegisterVo};
-use crate::service::account::user::{is_user_name_contained_service, user_register_service, user_login_service};
-use rocket::futures::{SinkExt, StreamExt};
-use tracing::info;
-use crate::dao::account::user::User;
-use crate::manager::ws::WEB_SOCKET_MANAGER;
-use std::sync::Mutex;
-use rocket_ws::stream::DuplexStream;
+use crate::service::account::user::{user_register_service};
 
 /**
 新建一个账户
@@ -32,7 +20,7 @@ use rocket_ws::stream::DuplexStream;
 pub async fn user_register_controller(info:  Json<UserRegisterVo>) -> JSONResponse<'static, UserRegisterResponseVo> {
     let result = user_register_service(info.into_inner().to_dto()).await;
     match result {
-        Ok(_) => Response::success(UserRegisterResponseVo::success()),
-        Err(e) => Response::error(UserRegisterResponseVo::error(&e)),
+        Ok(_) => HttpResponse::success(UserRegisterResponseVo::success()),
+        Err(e) => HttpResponse::error(UserRegisterResponseVo::error(&e)),
     }
 }

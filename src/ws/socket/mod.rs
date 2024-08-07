@@ -4,21 +4,17 @@ use std::sync::{Arc};
 use base64::Engine;
 use base64::engine::general_purpose;
 use rbatis::rbatis_codegen::ops::AsProxy;
-use tokio::io;
-use crate::dao::account::user::User;
-use crate::service::account::user::{user_login_service, push_user_service, remove_user_service};
-use crate::model::vo::ws::{UserLoginResponseVo, UserLoginVo, WebSocketDataVO};
 use rocket::get;
-use rocket::serde::json::Json;
+use crate::service::account::user::{user_login_service, push_user_service, remove_user_service};
+use crate::model::vo::ws::{UserLoginResponseVo, UserLoginVo};
 use rocket::serde::json::serde_json::json;
 use rocket_ws::Message;
-use rocket_ws::result::Error;
-use tokio_test::block_on;
-use crate::model::response::WebSocketResponse;
-use crate::service::ws::dispatcher_service;
+use crate::model::protocol::ws::request::WebSocketRequest;
+use crate::model::protocol::ws::response::WebSocketResponse;
 use crate::utils::id::generate_id;
+use crate::ws::dispatcher::ws_dispatcher;
 
-#[get("/login?<username>&<password>")]
+#[get("/connect?<username>&<password>")]
 pub async fn websocket_service(ws: rocket_ws::WebSocket,username:&str,password:&str) -> rocket_ws::Channel<'static> {
     tracing::info!("{} try to login",username);
     let info = UserLoginVo{
@@ -62,17 +58,17 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket,username:&str,password:&
                                 match message {
                                     Message::Text(text) => {
                                         // 进行路径分配处理
-                                        let data = WebSocketDataVO::new(&text);
+                                        let data = WebSocketRequest::new(&text);
                                         match data {
-                                            Ok(vo) => {
-                                                let mes_id = &vo.request_id.clone();
-                                                let mut result = dispatcher_service(vo.to_dto()).await;
+                                            Ok(request) => {
+                                                let mes_id = &request.request_id.clone();
+                                                let mut result = ws_dispatcher(request).await;
                                                 // 对result进行标识
                                                 result.id = *mes_id;
                                                 let _ = sender.lock().await.send(Message::Text(result.to_json())).await;
                                             }
                                             Err(error) => {
-                                                tracing::error!("{}",format!("websocket error,msg:{:?}",error));
+                                                tracing::error!("{}",format!("websocket error json structure,msg:{:?}",error));
                                                 shut_flag = true;
                                             }
                                         }
@@ -88,7 +84,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket,username:&str,password:&
                             }
                         }
                         // 检查flag
-                        if(shut_flag){
+                        if shut_flag {
                             // 执行清理工作
                             remove_user_service(id).await;
                             break;
