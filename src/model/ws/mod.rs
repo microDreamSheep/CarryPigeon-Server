@@ -1,7 +1,10 @@
 use std::sync::Arc;
+use rocket::futures::SinkExt;
 use rocket::futures::stream::SplitSink;
+use rocket_ws::Message;
 use rocket_ws::stream::DuplexStream;
 use tokio::sync::Mutex;
+use crate::model::protocol::ws::response::WebSocketResponse;
 
 /**
 ws通道管理的数据结构
@@ -9,16 +12,43 @@ ws通道管理的数据结构
  */
 pub struct WSUser{
     pub token:String,
-    pub sender: Arc<Mutex<SplitSink<DuplexStream,rocket_ws::Message>>>
+    pub sender: Arc<Mutex<CPSender>>
 }
 
 impl WSUser {
     pub fn new(
         token:String,
-        sender: Arc<Mutex<SplitSink<DuplexStream,rocket_ws::Message>>>
+        sender: Arc<Mutex<CPSender>>
     ) ->WSUser{
         WSUser{
             token,sender
         }
     }
 }
+
+/**
+对ws的sender进行的封装
+ */
+pub struct CPSender{
+    sender: SplitSink<DuplexStream,Message>
+}
+
+impl CPSender{
+    pub fn new(
+        sender: SplitSink<DuplexStream,Message>
+    )->CPSender{
+        CPSender{
+            sender
+        }
+    }
+
+    pub async fn send_json(&mut self, json:String){
+        let _ = self.sender.send(Message::Text(json)).await;
+    }
+
+    pub async fn send_ws_data(&mut self, response:WebSocketResponse){
+        self.send_json(response.to_json()).await
+    }
+
+}
+

@@ -3,8 +3,20 @@ use rocket::serde::json::{Json};
 use rocket_json_response::JSONResponse;
 use crate::model::protocol::http::response::HttpResponse;
 use crate::model::vo::tree_hole::{TreeHoleSendResponseVO, TreeHoleSendVO};
-use crate::service::tree_hole::tree_hole_send_service;
+use crate::service::chat::tree_hole::tree_hole_send_service;
 
+/**
+发送树洞消息
+
+请求格式
+```json
+{
+    "user_id:,
+    "data":"",
+    "token":""
+}
+```
+ */
 #[post("/send",data="<info>")]
 pub async fn tree_hole_send_controller(info:Json<TreeHoleSendVO>) -> JSONResponse<'static, TreeHoleSendResponseVO> {
     let result = tree_hole_send_service(info.0.token.clone(),info.0.to_dto()).await;

@@ -11,7 +11,8 @@
  账户相关内容
  */
 pub mod account;
+
 /**
- tree hole 相关服务
+聊天的相关服务
  */
-pub mod tree_hole;
+pub mod chat;

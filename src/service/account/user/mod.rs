@@ -1,10 +1,9 @@
 use std::sync::{Arc};
 use tokio::sync::Mutex;
-use rocket::futures::stream::SplitSink;
-use rocket_ws::stream::DuplexStream;
 use crate::dao::account::user::User;
 use crate::manager::ws::{WebSocketManager};
 use crate::model::dto::account::user::{UserLoginDTO, UserRegisterDTO};
+use crate::model::ws::CPSender;
 use crate::repository::account::user::{insert_user, select_user_by_name};
 
 /**
@@ -68,13 +67,13 @@ stream 两者连接的WebSocket
  */
 pub async fn push_user_service(
     user:User,
-    stream:Arc<Mutex<SplitSink<DuplexStream, rocket_ws::Message>>>,
+    sender:Arc<Mutex<CPSender>>,
     token:String
 ){
     // 对stream进行包装
     let id = user.id.unwrap();
     // 将其放入web ws manager进行管理
-    WebSocketManager::push_user(id, stream, token).await;
+    WebSocketManager::push_user(id, sender, token).await;
     // 通知全局用户上线 TODO
 }
 

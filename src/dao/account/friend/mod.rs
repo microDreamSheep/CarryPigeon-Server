@@ -1,3 +1,4 @@
+use rbatis::impl_select;
 use rbatis::rbdc::DateTime;
 use serde::{Deserialize, Serialize};
 
@@ -17,3 +18,5 @@ pub struct Friend {
     /// 发出申请的时间
     pub application_time:Option<DateTime>
 }
+
+impl_select!(Friend{select_all_by_id(id:&i64) => "`where (person_1 = #{id} or person_2 = #{id}) and state = 1`"});

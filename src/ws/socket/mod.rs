@@ -1,16 +1,17 @@
 use tokio::sync::Mutex;
-use rocket::futures::{SinkExt, StreamExt};
+use rocket::futures::{StreamExt};
 use std::sync::{Arc};
 use base64::Engine;
 use base64::engine::general_purpose;
 use rbatis::rbatis_codegen::ops::AsProxy;
 use rocket::get;
 use crate::service::account::user::{user_login_service, push_user_service, remove_user_service};
-use crate::model::vo::ws::{UserLoginResponseVo, UserLoginVo};
 use rocket::serde::json::serde_json::json;
 use rocket_ws::Message;
 use crate::model::protocol::ws::request::WebSocketRequest;
 use crate::model::protocol::ws::response::WebSocketResponse;
+use crate::model::vo::account::user::{UserLoginResponseVo, UserLoginVo};
+use crate::model::ws::CPSender;
 use crate::utils::id::generate_id;
 use crate::ws::dispatcher::ws_dispatcher;
 
@@ -23,27 +24,27 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket,username:&str,password:&
     };
     let user = user_login_service(info.to_dto()).await;
     // 创建到client的websocket连接
-    ws.channel(move |mut stream| {
+    ws.channel(move |stream| {
         Box::pin(async move {
+            // 对stream进行读写分离
+            let (sender,mut receiver) = stream.split();
+            // 对sender进行封装
+            let sender = Arc::new(Mutex::new(CPSender::new(sender)));
             match user {
                 None => {
-                    let _ = stream.send(Message::Text(WebSocketResponse::error(json!("login error")).to_json())).await;
+                    let _ = sender.lock().await.send_ws_data(WebSocketResponse::error(json!("login error"))).await;
                     return Ok(());
                 }
                 Some(user) => {
-                    // 对stream进行读写分离
-                    let (sender,mut receiver) = stream.split();
-                    let sender = Arc::new(Mutex::new(sender));
                     // 获取用户id
                     let id = user.id.unwrap();
                     // 生成用户token
                     let token = general_purpose::STANDARD.encode(generate_id().as_binary());
                     // 将token返回
-                    let _ = sender.lock().await.send(
-                        Message::Text(
-                            WebSocketResponse::success(
-                                json!(UserLoginResponseVo { token: token.clone() }),
-                            ).to_json()
+                    let _ = sender.lock().await.send_ws_data(
+                        WebSocketResponse::send(
+                            json!(UserLoginResponseVo { token: token.clone() }),
+                            "/token".to_string()
                         )
                     ).await;
                     push_user_service(user, Arc::clone(&sender), token).await;
@@ -65,7 +66,7 @@ pub async fn websocket_service(ws: rocket_ws::WebSocket,username:&str,password:&
                                                 let mut result = ws_dispatcher(request).await;
                                                 // 对result进行标识
                                                 result.id = *mes_id;
-                                                let _ = sender.lock().await.send(Message::Text(result.to_json())).await;
+                                                let _ = sender.lock().await.send_ws_data(result).await;
                                             }
                                             Err(error) => {
                                                 tracing::error!("{}",format!("websocket error json structure,msg:{:?}",error));
