@@ -23,7 +23,7 @@ CREATE TABLE group_member (
       user_id int8 NOT NULL comment "群聊用户的名字",
       "permission" int4 DEFAULT 3 NOT NULL comment "用户权限，1：群主 2：管理员 3：普通用户",
       state int4 DEFAULT 0 NOT NULL comment "用户状态：1：待处理 2：已同意 3：已拒绝",
-      join_time timestamp DEFAULT now() NOT NULL comment "邀请发送时间",
+      application_time timestamp DEFAULT now() NOT NULL comment "邀请发送时间",
       CONSTRAINT group_member_pk PRIMARY KEY (id)
 );
 

@@ -16,14 +16,15 @@ pub async fn tree_hole_send_service(token: String, data: TreeHoleSendDTO) ->Resu
     // 获取相关用户(所有好友)
     let friends = get_friends_repository(&data.user_id).await;
     // 将friends集合转化为id数组
-    let mut friend_ids = vec![];
+    let mut friend_ids = Vec::with_capacity(friends.len());
     for friend in friends {
         // 获取用户id
-        let mut id = if friend.person_1.unwrap() == *(&data.user_id) {
+        let id = if friend.person_1.unwrap() == *(&data.user_id) {
             friend.person_2.unwrap()
         }else {
             friend.person_1.unwrap()
         };
+        // 判断用户是否在线
         if WebSocketManager::is_online(&id).await {
             friend_ids.push(id);
         }

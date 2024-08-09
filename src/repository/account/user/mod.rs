@@ -4,7 +4,7 @@ use crate::dao::MYSQL_POOL;
 /**
  通过用户名获取用户
  */
-pub async fn select_user_by_name(
+pub async fn select_user_by_name_repository(
     user_name:&str
 ) -> Vec<User> {
     let result = User::select_by_column(MYSQL_POOL.get().unwrap(),"username",user_name).await;
@@ -22,7 +22,7 @@ pub async fn select_user_by_name(
 /**
  新增用户
  */
-pub async fn insert_user(
+pub async fn insert_user_repository(
     user:User
 )->bool {
     let result = User::insert(MYSQL_POOL.get().unwrap(),&user).await;

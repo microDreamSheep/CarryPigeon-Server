@@ -4,7 +4,7 @@ use crate::dao::account::user::User;
 use crate::manager::ws::{WebSocketManager};
 use crate::model::dto::account::user::{UserLoginDTO, UserRegisterDTO};
 use crate::model::ws::CPSender;
-use crate::repository::account::user::{insert_user, select_user_by_name};
+use crate::repository::account::user::{insert_user_repository, select_user_by_name_repository};
 
 /**
 校验用户名是否存在
@@ -13,7 +13,7 @@ user_name:注册的用户名
 pub async fn is_user_name_contained_service(
     user_name:&str
 )->bool{
-    select_user_by_name(user_name).await.is_empty()
+    select_user_by_name_repository(user_name).await.is_empty()
 }
 
 /**
@@ -26,7 +26,7 @@ pub async fn user_register_service(
     if !is_user_name_contained_service(&user_info.username).await {
         return Err("username already exists".to_string());
     }
-    if insert_user(user_info.to_do()).await {
+    if insert_user_repository(user_info.to_do()).await {
         return Ok("".to_string());
     }
     Err("register has some wrong".to_string())
@@ -38,7 +38,7 @@ pub async fn user_register_service(
 pub async fn user_login_service(
     user_info:UserLoginDTO
 )->Option<User>{
-    let users = select_user_by_name(&user_info.username).await;
+    let users = select_user_by_name_repository(&user_info.username).await;
     if users.is_empty() {
         tracing::info!("{} login error:no such user",user_info.username);
         return None;
