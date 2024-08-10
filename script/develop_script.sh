@@ -1,2 +1,2 @@
-sudo systemctl start postgresql
+sudo systemctl start mysql
 sudo systemctl start redis

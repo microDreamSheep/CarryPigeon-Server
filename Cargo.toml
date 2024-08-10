@@ -24,11 +24,7 @@ cbc = { version = "0.1.2", features = ["block-padding", "alloc"] }
 thiserror = "1.0.63"
 # 用于定义全局变量
 lazy_static = "1.5.0"
-# 加密相关库
-rust-crypto = "0.2.36"
-aes = "0.8.4"
 base64 = "0.21.7"
-openssl = "0.10"
 # 数据库连接相关
 rbs = { version = "4.5" }
 rbdc-mysql = { version = "4.5" }

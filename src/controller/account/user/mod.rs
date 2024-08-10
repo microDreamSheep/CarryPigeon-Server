@@ -7,13 +7,14 @@ use crate::service::account::user::{user_register_service};
 
 /**
 新建一个账户
+
 数据传入格式：
+
 ```json
 {
     "username":"",
     "password":""
 }
-返回值
 ```
  */
 #[post("/register", data = "<info>")]
