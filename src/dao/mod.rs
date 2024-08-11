@@ -19,18 +19,17 @@ async fn fun(){
 
  */
 
+use rbatis::RBatis;
+use rbdc_mysql::MysqlDriver;
 use redis::aio::MultiplexedConnection;
 use std::sync::OnceLock;
-use rbatis::{RBatis};
-use rbdc_mysql::MysqlDriver;
 
 pub static MYSQL_POOL: OnceLock<RBatis> = OnceLock::new();
 pub static mut REDIS_POOL: OnceLock<MultiplexedConnection> = OnceLock::new();
 
-
 /**
- 初始化数据库连接，连接mysql和redis并生成连接池供调用
- */
+初始化数据库连接，连接mysql和redis并生成连接池供调用
+*/
 #[inline]
 pub async fn init_pool() {
     // mysql 连接
@@ -59,10 +58,10 @@ pub async fn init_pool() {
 }
 
 /**
- 账户相关dao操作
- */
+账户相关dao操作
+*/
 pub mod account;
 /**
- 消息相关操作
- */
+消息相关操作
+*/
 pub mod message;

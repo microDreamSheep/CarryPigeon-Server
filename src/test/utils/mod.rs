@@ -1,4 +1,4 @@
 #[cfg(test)]
-mod id;
-#[cfg(test)]
 mod crypto;
+#[cfg(test)]
+mod id;

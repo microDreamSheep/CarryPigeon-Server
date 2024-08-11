@@ -1,9 +1,9 @@
-use std::{thread};
-use std::time::Duration;
 use crate::utils::id::generate_id;
+use std::thread;
+use std::time::Duration;
 
 #[test]
-fn id_generate_test(){
+fn id_generate_test() {
     // 创建一个数组用来装子线程
     let mut handles = vec![];
     for i in 0..6 {
@@ -12,7 +12,7 @@ fn id_generate_test(){
             // 调用生成id
             for _ in 0..=10 {
                 thread::sleep(Duration::from_millis(10));
-                println!("{}",generate_id())
+                println!("{}", generate_id())
             }
         });
         // 存储子线程

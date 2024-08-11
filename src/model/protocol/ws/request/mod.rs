@@ -16,8 +16,8 @@ route 为请求路径，用于标识该请求应该使用那个处理函数进�
 data为请求中的具体数据，为rocket::serde::json::Value，具体的处理函数自己决定如何对其进行处理
  */
 
-use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::{serde_json, Value};
+use rocket::serde::{Deserialize, Serialize};
 
 /**
 websocket数据模型，所有通过websocket的消息都必须满足此模型
@@ -25,17 +25,15 @@ websocket数据模型，所有通过websocket的消息都必须满足此模型
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WebSocketRequest {
     /// 消息id，用于客户端进行本地异步处理
-    pub request_id:i64,
+    pub request_id: i64,
     /// route 用于进行路径分配
     pub route: String,
     /// 具体的数据
-    pub data:Value
+    pub data: Value,
 }
 
 impl WebSocketRequest {
-    pub fn new(
-        text:&str
-    ) ->serde_json::Result<WebSocketRequest> {
+    pub fn new(text: &str) -> serde_json::Result<WebSocketRequest> {
         serde_json::from_str(text)
     }
 }

@@ -1,12 +1,12 @@
 /**
- 用户帐号相关操作
- */
-pub mod user;
+好友相关操作
+*/
+pub mod friend;
 /**
- 群聊相关操作
- */
+群聊相关操作
+*/
 pub mod group;
 /**
- 好友相关操作
- */
-pub mod friend;
+用户帐号相关操作
+*/
+pub mod user;

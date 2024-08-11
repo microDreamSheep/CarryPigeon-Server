@@ -1,16 +1,16 @@
-use rbatis::rbdc::DateTime;
 use crate::dao::message::Message;
 use crate::model::chat::{CPMessageDataTrait, CPMessageTrait};
 use crate::utils::id::generate_id;
+use rbatis::rbdc::DateTime;
 
 pub struct TreeHoleMessage {
-    pub from_id:i64,
-    pub data: Box<dyn CPMessageDataTrait>
+    pub from_id: i64,
+    pub data: Box<dyn CPMessageDataTrait>,
 }
 
 impl CPMessageTrait for TreeHoleMessage {
     fn to_message(self) -> Message {
-        Message{
+        Message {
             id: Some(generate_id()),
             from_id: Some(self.from_id),
             to_id: Some(-1),

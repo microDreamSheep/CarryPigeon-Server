@@ -7,14 +7,14 @@ controller层，用于处理前端的请求
  */
 
 /**
- 账户相关模块，用于账户相关操作
- */
+账户相关模块，用于账户相关操作
+*/
 pub mod account;
 /**
- 树洞功能相关的controller
- */
-pub mod tree_hole;
-/**
- 具体聊天服务相关的controller
- */
+具体聊天服务相关的controller
+*/
 pub mod chat;
+/**
+树洞功能相关的controller
+*/
+pub mod tree_hole;

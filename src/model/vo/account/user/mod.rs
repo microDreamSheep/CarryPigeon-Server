@@ -1,7 +1,7 @@
-use rocket::FromForm;
-use rocket::serde::{Deserialize, Serialize};
-use rocket_json_response::serialize_to_json;
 use crate::model::dto::account::user::{UserLoginDTO, UserRegisterDTO};
+use rocket::serde::{Deserialize, Serialize};
+use rocket::FromForm;
+use rocket_json_response::serialize_to_json;
 
 /**
 注册账户的数据结构，用与controller接收数据
@@ -14,36 +14,34 @@ pub struct UserRegisterVo {
 
 impl UserRegisterVo {
     /**
-     用于当前vo转化为controller与service间的数据结构
-     */
-    pub fn to_dto(self) ->UserRegisterDTO{
-        UserRegisterDTO{
-            username:self.username,
-            password:self.password
+    用于当前vo转化为controller与service间的数据结构
+    */
+    pub fn to_dto(self) -> UserRegisterDTO {
+        UserRegisterDTO {
+            username: self.username,
+            password: self.password,
         }
     }
 }
 
 /**
- 注册账户返回json结构
- */
-#[derive(Clone, Debug,Serialize)]
-pub struct UserRegisterResponseVo{
-    pub mes:String
+注册账户返回json结构
+*/
+#[derive(Clone, Debug, Serialize)]
+pub struct UserRegisterResponseVo {
+    pub mes: String,
 }
 serialize_to_json!(UserRegisterResponseVo);
 
-impl UserRegisterResponseVo{
-    pub fn success()->UserRegisterResponseVo{
-        UserRegisterResponseVo{
+impl UserRegisterResponseVo {
+    pub fn success() -> UserRegisterResponseVo {
+        UserRegisterResponseVo {
             mes: "register success".to_string(),
         }
     }
-    pub fn error(
-        msg:&str
-    )->UserRegisterResponseVo{
-        UserRegisterResponseVo{
-            mes: "register error,msg: ".to_string()+msg,
+    pub fn error(msg: &str) -> UserRegisterResponseVo {
+        UserRegisterResponseVo {
+            mes: "register error,msg: ".to_string() + msg,
         }
     }
 }
@@ -63,10 +61,10 @@ impl UserLoginVo {
     /**
     用于当前vo转化为controller与service间的数据结构
      */
-    pub fn to_dto(self) ->UserLoginDTO{
+    pub fn to_dto(self) -> UserLoginDTO {
         UserLoginDTO {
-            username:self.username,
-            password:self.password
+            username: self.username,
+            password: self.password,
         }
     }
 }
@@ -76,5 +74,5 @@ impl UserLoginVo {
  */
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UserLoginResponseVo {
-    pub token:String
+    pub token: String,
 }

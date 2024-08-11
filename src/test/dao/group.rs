@@ -1,4 +1,4 @@
-use crate::dao::{init_pool};
+use crate::dao::init_pool;
 use crate::repository::account::group::get_group_members_repository;
 
 #[test]

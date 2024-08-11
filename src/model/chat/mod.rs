@@ -15,14 +15,14 @@ use crate::dao::message::Message;
 
 pub trait CPMessageTrait {
     /// 将消息转换为存储在数据库中的数据格式
-    fn to_message(self)->Message;
+    fn to_message(self) -> Message;
     /// 设置消息的具体数据
-    fn set_data(&mut self,data:Box<dyn CPMessageDataTrait>);
+    fn set_data(&mut self, data: Box<dyn CPMessageDataTrait>);
 }
 
 pub trait CPMessageDataTrait {
     /// 获取消息的类型id
-    fn get_message_type_id(&self)->i32;
+    fn get_message_type_id(&self) -> i32;
     /// 获取具体的存储数据
-    fn get_message_data(&self)->String;
+    fn get_message_data(&self) -> String;
 }

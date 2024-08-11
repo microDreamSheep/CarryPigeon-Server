@@ -10,7 +10,6 @@ pub mod http;
  */
 pub mod ws;
 
-
 /*相关常量*/
-pub const SUCCESS_CODE:u32 = 200;
-pub const ERROR_CODE:u32 = 100;
+pub const SUCCESS_CODE: u32 = 200;
+pub const ERROR_CODE: u32 = 100;

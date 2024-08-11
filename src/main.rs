@@ -1,14 +1,16 @@
 #[macro_use]
 extern crate rocket;
 
+use carrypigeon_server::controller::account::user::user_register_controller;
+use carrypigeon_server::controller::tree_hole::tree_hole_send_controller;
+use carrypigeon_server::manager::ws::init_web_socket_manager;
+use carrypigeon_server::utils::id::init_snow;
+use carrypigeon_server::ws::init_ws_dispatcher;
+use carrypigeon_server::ws::socket::websocket_service;
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, Registry,
 };
-use carrypigeon_server::controller::account::user::{user_register_controller};
-use carrypigeon_server::ws::socket::websocket_service;
-use carrypigeon_server::controller::tree_hole::tree_hole_send_controller;
-
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
@@ -37,6 +39,11 @@ async fn main() -> Result<(), rocket::Error> {
         .with(file_layer)
         .init();
 
+    // 初始化
+    init_snow().await;
+    init_web_socket_manager().await;
+    init_ws_dispatcher().await;
+
     // connect database
     carrypigeon_server::dao::init_pool().await;
 
@@ -44,8 +51,8 @@ async fn main() -> Result<(), rocket::Error> {
         //.mount("/authenticator", routes![post_authenticator])
         //.mount("/group", routes![new_group])
         .mount("/account/user", routes![user_register_controller])
-        .mount("/tree_hole",routes![tree_hole_send_controller])
-        .mount("/websocket",routes![websocket_service])
+        .mount("/tree_hole", routes![tree_hole_send_controller])
+        .mount("/websocket", routes![websocket_service])
         //.mount("/service", routes![websocket_service])
         //.mount("/upload", routes![upload_file, retrieve_file, delete_file])
         .launch()
