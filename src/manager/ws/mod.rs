@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 
 pub static WEB_SOCKET_MANAGER: OnceLock<WebSocketManager> = OnceLock::new();
 
-pub async fn init_web_socket_manager() {
+pub fn init_web_socket_manager() {
     let _ = WEB_SOCKET_MANAGER.set(WebSocketManager::new());
 }
 

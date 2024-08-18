@@ -40,9 +40,9 @@ async fn main() -> Result<(), rocket::Error> {
         .init();
 
     // 初始化
-    init_snow().await;
-    init_web_socket_manager().await;
-    init_ws_dispatcher().await;
+    init_snow();
+    init_web_socket_manager();
+    init_ws_dispatcher();
 
     // connect database
     carrypigeon_server::dao::init_pool().await;

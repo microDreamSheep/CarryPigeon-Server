@@ -23,8 +23,8 @@ pub fn generate_id() -> i64 {
 }
 
 static SNOW: OnceLock<SnowflakeIdWorker> = OnceLock::new();
-pub async fn init_snow() {
-    SNOW.set(SnowflakeIdWorker::new(20));
+pub fn init_snow() {
+    let _ = SNOW.set(SnowflakeIdWorker::new(20));
 }
 
 #[derive(Clone)]

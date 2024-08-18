@@ -15,7 +15,7 @@ pub mod socket;
  fn(Value)->WebSocketResponse
 */
 pub static WS_DISPATCHER: OnceLock<WebSocketDispatcher> = OnceLock::new();
-pub async fn init_ws_dispatcher() {
+pub fn init_ws_dispatcher() {
     let _ = WS_DISPATCHER.set(
         WebSocketDispatcher::new(), //.attach_path("/chat/tree_hole/send",tree_hole_send_controller))
     );

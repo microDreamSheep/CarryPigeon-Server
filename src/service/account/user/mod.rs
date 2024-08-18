@@ -52,7 +52,7 @@ pub async fn user_login_service(user_info: UserLoginDTO) -> Option<User> {
             }
         };
     }
-    return None;
+    None
 }
 /**
 将用户放入
@@ -81,8 +81,8 @@ pub async fn remove_user_service(id: i64) {
  */
 pub async fn user_authority_check_service(id: &i64, token: String) -> bool {
     let user_token = WebSocketManager::get_user_token(id).await;
-    return match user_token {
+    match user_token {
         None => false,
         Some(user_token) => user_token.eq(&token),
-    };
+    }
 }
