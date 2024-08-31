@@ -6,14 +6,14 @@ use crate::dao::MYSQL_POOL;
  */
 pub async fn get_friends_repository(user_id: &i64) -> Vec<Friend> {
     let result = Friend::select_all_friends_by_id(MYSQL_POOL.get().unwrap(), user_id).await;
-    return match result {
+    match result {
         Ok(friends) => friends,
         Err(e) => {
             // 输出错误日志
             tracing::error!("{}", e.to_string());
             Vec::new()
         }
-    };
+    }
 }
 
 /**
@@ -21,9 +21,9 @@ pub async fn get_friends_repository(user_id: &i64) -> Vec<Friend> {
  */
 pub async fn get_friend_repository(friend_id: &i64) -> Result<Friend, String> {
     let result = Friend::select_by_column(MYSQL_POOL.get().unwrap(), "id", friend_id).await;
-    return match result {
+    match result {
         Ok(friend) => {
-            if friend.len() == 0 {
+            if friend.is_empty() {
                 let error_msg = format!("no such friend id:{}", friend_id);
                 tracing::error!("{}", &error_msg);
                 return Err(error_msg);
@@ -31,5 +31,5 @@ pub async fn get_friend_repository(friend_id: &i64) -> Result<Friend, String> {
             Ok(friend[0].clone())
         }
         Err(e) => Err(e.to_string()),
-    };
+    }
 }

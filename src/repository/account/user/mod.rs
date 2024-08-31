@@ -23,7 +23,7 @@ pub async fn select_user_by_name_repository(user_name: &str) -> Vec<User> {
 */
 pub async fn insert_user_repository(user: User) -> bool {
     let result = User::insert(MYSQL_POOL.get().unwrap(), &user).await;
-    return match result {
+    match result {
         Ok(_) => true,
         Err(e) => {
             tracing::error!(
@@ -33,5 +33,5 @@ pub async fn insert_user_repository(user: User) -> bool {
             tracing::error!("error user data:{:?}", user);
             false
         }
-    };
+    }
 }

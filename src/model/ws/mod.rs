@@ -37,6 +37,10 @@ impl CPSender {
         let _ = self.sender.send(Message::Text(json)).await;
     }
 
+    pub async fn send_pong(&mut self) {
+        let _ = self.sender.send(Message::Pong("pong".as_bytes().to_vec())).await;
+    }
+
     pub async fn send_ws_data(&mut self, response: WebSocketResponse) {
         self.send_json(response.to_json()).await
     }

@@ -32,27 +32,31 @@ pub async fn user_register_service(user_info: UserRegisterDTO) -> Result<String,
 用于用户进行登录
 */
 pub async fn user_login_service(user_info: UserLoginDTO) -> Option<User> {
-    let users = select_user_by_name_repository(&user_info.username).await;
-    if users.is_empty() {
+    // 由于用户名是唯一确定的，所以此处鉴定为烂代码
+    let user = select_user_by_name_repository(&user_info.username).await;
+    if user.is_empty() {
         tracing::info!("{} login error:no such user", user_info.username);
         return None;
     }
-    for user in users {
-        return match &user.password {
-            None => {
-                tracing::error!("password of {} is empty", user.username.unwrap());
-                None
+    let user = Box::new(user.get(1));
+    match *user{
+        Some(user) => {
+            match &user.password {
+                None => {
+                    tracing::error!("password of {} is empty", user.username.clone().unwrap());
+                    None
+                },
+                Some(password) => {
+                    if !password.eq(&user_info.password) {
+                        tracing::info!("{} login error: password wrong", user.username.clone().unwrap());
+                        return None;
+                    }
+                    Some(user.clone())
+                },
             }
-            Some(password) => {
-                if !password.eq(&user_info.password) {
-                    tracing::info!("{} login error: password wrong", user.username.unwrap());
-                    return None;
-                }
-                Some(user)
-            }
-        };
+        },
+        None => None,
     }
-    None
 }
 /**
 将用户放入

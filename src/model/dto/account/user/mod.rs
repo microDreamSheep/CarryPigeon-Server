@@ -17,7 +17,7 @@ impl UserRegisterDTO {
             id: Some(generate_id()),
             username: Some(self.username),
             password: Some(self.password),
-            data: None,
+            data: Some(String::new()),
             register_time: Some(DateTime::now()),
         }
     }

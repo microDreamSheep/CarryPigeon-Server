@@ -47,3 +47,9 @@ impl WebSocketDispatcher {
         self
     }
 }
+
+impl Default for WebSocketDispatcher {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -1,6 +1,6 @@
 [package]
 name = "carrypigeon-server"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
 
 [dependencies]
@@ -14,9 +14,9 @@ tracing = "0.1.40"
 tracing-appender = "0.2.3"
 tracing-error = "0.2.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tokio = "1.38.0"
+tokio = "1.40.0"
 tokio-test = "0.4.4"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 jsonwebtoken = { version = "9.3.0", features = ["use_pem"] }
 rand = { version = "0.8.5", features = ["std_rng"] }
 pkcs8 = { version = "0.10.2", features = ["alloc"] }

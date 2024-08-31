@@ -7,7 +7,7 @@ fn id_generate_test() {
     // 创建一个数组用来装子线程
     let mut handles = vec![];
     for i in 0..6 {
-        let sleep_time = i;
+        let _sleep_time = i;
         let handle = thread::spawn(move || {
             // 调用生成id
             for _ in 0..=10 {

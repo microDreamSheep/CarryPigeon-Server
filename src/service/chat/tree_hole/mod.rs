@@ -19,7 +19,7 @@ pub async fn tree_hole_send_service(token: String, data: TreeHoleSendDTO) -> Res
     let mut friend_ids = Vec::with_capacity(friends.len());
     for friend in friends {
         // 获取用户id
-        let id = if friend.person_1.unwrap() == *(&data.user_id) {
+        let id = if friend.person_1.unwrap() == data.user_id {
             friend.person_2.unwrap()
         } else {
             friend.person_1.unwrap()
@@ -34,5 +34,5 @@ pub async fn tree_hole_send_service(token: String, data: TreeHoleSendDTO) -> Res
         data: Box::new(CPTextMessageData::new(&data.data)),
     };
     let message = tree_hole_message.to_message();
-    return push_message_and_notice_all_service(message, friend_ids).await;
+    push_message_and_notice_all_service(message, friend_ids).await
 }

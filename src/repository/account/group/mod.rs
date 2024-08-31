@@ -6,7 +6,7 @@ use crate::dao::MYSQL_POOL;
  */
 pub async fn get_group_members_repository(group_id: &i64) -> Vec<i64> {
     let result = GroupMember::select_all_member(MYSQL_POOL.get().unwrap(), group_id).await;
-    return match result {
+    match result {
         Ok(members) => {
             let mut member_ids = Vec::with_capacity(members.len());
             for member in members {
@@ -18,5 +18,5 @@ pub async fn get_group_members_repository(group_id: &i64) -> Vec<i64> {
             tracing::error!("{}", e.to_string());
             Vec::new()
         }
-    };
+    }
 }

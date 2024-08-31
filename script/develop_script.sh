@@ -1,2 +1,2 @@
 sudo systemctl start mysql
-sudo systemctl start redis
+sudo systemctl start redis-server

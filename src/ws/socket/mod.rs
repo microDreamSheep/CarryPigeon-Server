@@ -94,7 +94,9 @@ pub async fn websocket_service(
                                         }
                                     }
                                     Message::Binary(_) => {}
-                                    Message::Ping(_) => {}
+                                    Message::Ping(_) => {
+                                        let _ = sender.lock().await.send_pong().await;
+                                    }
                                     Message::Pong(_) => {}
                                     Message::Close(_) => {
                                         shut_flag = true;
