@@ -38,21 +38,22 @@ pub async fn user_login_service(user_info: UserLoginDTO) -> Option<User> {
         tracing::info!("{} login error:no such user", user_info.username);
         return None;
     }
-    let user = Box::new(user.get(1));
-    match *user{
-        Some(user) => {
-            match &user.password {
-                None => {
-                    tracing::error!("password of {} is empty", user.username.clone().unwrap());
-                    None
-                },
-                Some(password) => {
-                    if !password.eq(&user_info.password) {
-                        tracing::info!("{} login error: password wrong", user.username.clone().unwrap());
-                        return None;
-                    }
-                    Some(user.clone())
-                },
+    let user = Box::new(user.get(0));
+    match *user {
+        Some(user) => match &user.password {
+            None => {
+                tracing::error!("password of {} is empty", user.username.clone().unwrap());
+                None
+            }
+            Some(password) => {
+                if !password.eq(&user_info.password) {
+                    tracing::info!(
+                        "{} login error: password wrong",
+                        user.username.clone().unwrap()
+                    );
+                    return None;
+                }
+                Some(user.clone())
             }
         },
         None => None,
