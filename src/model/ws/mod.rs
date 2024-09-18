@@ -38,7 +38,10 @@ impl CPSender {
     }
 
     pub async fn send_pong(&mut self) {
-        let _ = self.sender.send(Message::Pong("pong".as_bytes().to_vec())).await;
+        let _ = self
+            .sender
+            .send(Message::Pong("pong".as_bytes().to_vec()))
+            .await;
     }
 
     pub async fn send_ws_data(&mut self, response: WebSocketResponse) {

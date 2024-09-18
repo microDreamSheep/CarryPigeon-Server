@@ -38,7 +38,7 @@ pub async fn user_login_service(user_info: UserLoginDTO) -> Option<User> {
         tracing::info!("{} login error:no such user", user_info.username);
         return None;
     }
-    let user = Box::new(user.get(0));
+    let user = Box::new(user.first());
     match *user {
         Some(user) => match &user.password {
             None => {

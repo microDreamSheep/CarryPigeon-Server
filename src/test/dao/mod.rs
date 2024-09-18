@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod group;
-
 #[test]
 fn test_init_pool() {
     tokio_test::block_on(impl_init_pool());

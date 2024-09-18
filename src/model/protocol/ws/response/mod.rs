@@ -85,7 +85,7 @@ impl WebSocketResponse {
             route: Some(route),
         }
     }
-    
+
     pub fn to_json(self) -> String {
         json!(self).to_json()
     }

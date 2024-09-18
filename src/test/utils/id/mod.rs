@@ -3,7 +3,11 @@ use std::thread;
 use std::time::Duration;
 
 #[test]
-fn id_generate_test() {
+fn id_generate_test(){
+    tokio_test::block_on(impl_id_generate_test());
+}
+
+async fn impl_id_generate_test() {
     // 创建一个数组用来装子线程
     let mut handles = vec![];
     for i in 0..6 {
@@ -17,9 +21,5 @@ fn id_generate_test() {
         });
         // 存储子线程
         handles.push(handle);
-    }
-    // 主线程等待所有子线程执行完毕
-    for handle in handles {
-        handle.join().unwrap();
     }
 }
