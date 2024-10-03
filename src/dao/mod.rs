@@ -25,7 +25,7 @@ use redis::aio::MultiplexedConnection;
 use std::sync::OnceLock;
 
 pub static MYSQL_POOL: OnceLock<RBatis> = OnceLock::new();
-pub static mut REDIS_POOL: OnceLock<MultiplexedConnection> = OnceLock::new();
+pub static REDIS_POOL: OnceLock<MultiplexedConnection> = OnceLock::new();
 
 /**
 初始化数据库连接，连接mysql和redis并生成连接池供调用
@@ -39,7 +39,7 @@ pub async fn init_pool() {
     // Redis连接
     match redis::Client::open("redis://localhost:6379/0") {
         Ok(v) => match v.get_multiplexed_async_connection().await {
-            Ok(v) => match unsafe { REDIS_POOL.set(v) } {
+            Ok(v) => match REDIS_POOL.set(v) {
                 Ok(_) => {
                     tracing::info!("Redis is successfully linked");
                 }

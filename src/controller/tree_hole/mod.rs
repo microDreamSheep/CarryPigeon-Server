@@ -22,8 +22,8 @@ pub async fn tree_hole_send_controller(
     info: Json<TreeHoleSendVO>,
 ) -> JSONResponse<'static, TreeHoleSendResponseVO> {
     let result = tree_hole_send_service(info.0.token.clone(), info.0.to_dto()).await;
-    return match result {
+    match result {
         Ok(_) => HttpResponse::success(TreeHoleSendResponseVO::success()),
         Err(e) => HttpResponse::error(TreeHoleSendResponseVO::error(e)),
-    };
+    }
 }

@@ -93,15 +93,18 @@ pub async fn websocket_service(
                                             }
                                         }
                                     }
-                                    Message::Binary(_) => {}
+                                    Message::Binary(_binary) => {}
                                     Message::Ping(_) => {
                                         let _ = sender.lock().await.send_pong().await;
                                     }
-                                    Message::Pong(_) => {}
+                                    Message::Pong(_) => {
+                                        // 暂不接受Pong
+                                        shut_flag = true;
+                                    }
                                     Message::Close(_) => {
                                         shut_flag = true;
                                     }
-                                    Message::Frame(_) => {}
+                                    Message::Frame(_frame) => {}
                                 }
                             }
                         }

@@ -105,5 +105,4 @@ pub static WEBSOCKET_RESPONSE_CONTENT_STRUCTURE_ERROR: OnceLock<WebSocketRespons
 /**
 用于测试使用
  */
-
 pub static WEBSOCKET_RESPONSE_ERROR: OnceLock<WebSocketResponse> = OnceLock::new();

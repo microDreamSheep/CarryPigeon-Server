@@ -10,3 +10,20 @@ pub struct MessageUpdateNotification {
 }
 
 serialize_to_json!(MessageUpdateNotification);
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ChatSendResponseVO {
+    pub msg: String,
+}
+serialize_to_json!(ChatSendResponseVO);
+
+impl ChatSendResponseVO {
+    pub fn success() -> ChatSendResponseVO {
+        ChatSendResponseVO {
+            msg: "chat post success".to_string(),
+        }
+    }
+    pub fn error(error_msg: String) -> ChatSendResponseVO {
+        ChatSendResponseVO { msg: error_msg }
+    }
+}
