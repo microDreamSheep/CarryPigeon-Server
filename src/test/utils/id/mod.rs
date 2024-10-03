@@ -3,7 +3,7 @@ use std::thread;
 use std::time::Duration;
 
 #[test]
-fn id_generate_test(){
+fn id_generate_test() {
     tokio_test::block_on(impl_id_generate_test());
 }
 

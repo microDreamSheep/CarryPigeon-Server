@@ -1,5 +1,10 @@
-use crate::{dao::{message::Message, MYSQL_POOL}, model::{protocol::ws::response::WebSocketResponse, vo::chat::ChatSendResponseVO}};
+use crate::{
+    dao::{message::Message, MYSQL_POOL, REDIS_POOL},
+    model::{protocol::ws::response::WebSocketResponse, vo::chat::ChatSendResponseVO},
+};
+use redis::AsyncCommands;
 use rocket::serde::json::{from_value, Value};
+use rocket_json_response::json_gettext::serde_json::json;
 
 /**
 聊天
@@ -27,13 +32,34 @@ pub struct Message {
 ```
 */
 pub async fn chat_send_controller(info: Value) -> WebSocketResponse {
-    let value: Message = from_value(info).unwrap();
-    match Message::insert(MYSQL_POOL.get().unwrap(), &value).await{
+    let value: Message = from_value(info.clone()).unwrap();
+    match Message::insert(MYSQL_POOL.get().unwrap(), &value).await {
         Ok(_) => {
+            // 添加数据至redis作为缓存
+            unsafe {
+                let temp = REDIS_POOL.get().unwrap().get().as_mut().unwrap();
+                let mut temp_pool: Vec<String> = temp.get(value.to_id).await.unwrap();
+                temp_pool.push(info.to_string());
+                let _: () = temp.set(value.to_id, temp_pool).await.unwrap();
+            };
             WebSocketResponse::success(Value::String(ChatSendResponseVO::success().msg))
-        },
-        Err(e) => {
-            WebSocketResponse::error(Value::String(e.to_string()))
         }
+        Err(e) => WebSocketResponse::error(Value::String(e.to_string())),
     }
+}
+
+pub async fn chat_receive_request_controller(info: Value) -> WebSocketResponse {
+    let value: Message = from_value(info.clone()).unwrap();
+    let temp = unsafe {
+        let temp = REDIS_POOL.get().unwrap().get().as_mut().unwrap();
+        let mut temp_pool: Vec<String> = temp.get(value.to_id).await.unwrap();
+        let result = temp_pool.first().unwrap().as_str().to_owned();
+        temp_pool.remove(0);
+        result
+    };
+    if temp.is_empty() {
+        //TODO: 处理redis缓存信息空的情况
+        return WebSocketResponse::error(json!("null"));
+    }
+    WebSocketResponse::success(Value::String(temp))
 }

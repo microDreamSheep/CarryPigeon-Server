@@ -1,4 +1,4 @@
-#![feature(fn_traits)]
+#![feature(fn_traits, sync_unsafe_cell)]
 
 #[cfg(test)]
 mod test;
